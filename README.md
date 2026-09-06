@@ -1,2 +1,1 @@
-# kanban-board
-A kanban board with realtime updates
+This is a work in progress. This repo will in the future contain a kanban board with real-time updates.

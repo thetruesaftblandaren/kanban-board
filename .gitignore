@@ -1,0 +1,35 @@
+### .NET / Visual Studio ###
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.userprefs
+
+### Node / React ###
+node_modules/
+dist/
+build/
+.vite/
+
+### Environment variables ###
+.env
+.env.local
+*.env
+
+### Database ###
+*.db
+*.sqlite
+
+### Docker ###
+# (vanligtvis inget behöver ignoreras här, men om du kör lokala volymer:)
+postgres-data/
+
+### Editor / OS ###
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+### Logs ###
+*.log
