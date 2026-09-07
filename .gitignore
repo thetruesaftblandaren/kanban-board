@@ -33,3 +33,7 @@ Thumbs.db
 
 ### Logs ###
 *.log
+
+### Secrets (extra safety net) ###
+appsettings.*.local.json
+secrets.json
