@@ -1,6 +1,6 @@
-namespace Kanban.Application.Common;
-
 using Kanban.Domain.Entities;
+
+namespace Kanban.Application.Common;
 
 public interface IUserRepository
 {
