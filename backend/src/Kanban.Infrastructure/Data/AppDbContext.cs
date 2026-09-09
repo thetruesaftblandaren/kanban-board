@@ -20,6 +20,22 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
     {
         base.OnModelCreating(builder);
 
+        builder.Entity<Board>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Navigation(x => x.Columns).UsePropertyAccessMode(PropertyAccessMode.Field);
+            b.Navigation(x => x.Members).UsePropertyAccessMode(PropertyAccessMode.Field);
+            b.HasMany(x => x.Columns).WithOne().HasForeignKey(c => c.BoardId).OnDelete(DeleteBehavior.Cascade);
+            b.HasMany(x => x.Members).WithOne(m => m.Board).HasForeignKey(m => m.BoardId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Column>(c =>
+        {
+            c.HasKey(x => x.Id);
+            c.Navigation(x => x.Cards).UsePropertyAccessMode(PropertyAccessMode.Field);
+            c.HasMany(x => x.Cards).WithOne().HasForeignKey(card => card.ColumnId).OnDelete(DeleteBehavior.Cascade);
+        });
+
         // Should be unique despite having a surrogate key
         builder.Entity<BoardMember>()
             .HasIndex(bm => new { bm.UserId, bm.BoardId })

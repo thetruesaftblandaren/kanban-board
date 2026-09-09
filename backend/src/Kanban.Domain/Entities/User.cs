@@ -6,6 +6,5 @@ public class User
     public string Email { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;
 
-    public ICollection<Board> OwnedBoards { get; set; } = new List<Board>();
     public ICollection<BoardMember> BoardMemberships { get; set; } = new List<BoardMember>();
 }

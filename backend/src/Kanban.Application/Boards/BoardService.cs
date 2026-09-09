@@ -14,25 +14,9 @@ public class BoardService : IBoardService
 
     public async Task<Result<BoardResponse>> CreateBoardAsync(Guid userId, CreateBoardRequest request)
     {
-        var board = new Board
-        {
-            Id = Guid.NewGuid(),
-            Name = request.Name,
-            OwnerId = userId,
-            CreatedAt = DateTime.UtcNow
-        };
+        var board = Board.Create(request.Name, userId);
 
         await _boardRepository.AddAsync(board);
-
-        var ownerMembership = new BoardMember
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            BoardId = board.Id,
-            Role = BoardRole.Owner
-        };
-
-        await _boardRepository.AddMemberAsync(ownerMembership);
         await _boardRepository.SaveChangesAsync();
 
         return Result<BoardResponse>.Ok(new BoardResponse(board.Id, board.Name, board.OwnerId, board.CreatedAt));
@@ -49,13 +33,14 @@ public class BoardService : IBoardService
 
     public async Task<Result<BoardResponse>> GetBoardByIdAsync(Guid userId, Guid boardId)
     {
-        var isMember = await _boardRepository.IsUserMemberAsync(boardId, userId);
-        if (!isMember)
-            return Result<BoardResponse>.Fail("You do not have access to this board.");
-
         var board = await _boardRepository.GetByIdAsync(boardId);
         if (board is null)
             return Result<BoardResponse>.Fail("Board not found.");
+        
+        if (!board.IsMember(userId))
+        {
+            return Result<BoardResponse>.Fail("You do not have access to this board.");
+        }
 
         return Result<BoardResponse>.Ok(new BoardResponse(board.Id, board.Name, board.OwnerId, board.CreatedAt));
     }

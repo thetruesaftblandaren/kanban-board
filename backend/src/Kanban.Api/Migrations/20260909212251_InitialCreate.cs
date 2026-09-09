@@ -53,6 +53,20 @@ namespace Kanban.Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Boards",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    OwnerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Boards", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "DomainUsers",
                 columns: table => new
                 {
@@ -172,21 +186,21 @@ namespace Kanban.Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Boards",
+                name: "Columns",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    OwnerId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    BoardId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Order = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Boards", x => x.Id);
+                    table.PrimaryKey("PK_Columns", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Boards_DomainUsers_OwnerId",
-                        column: x => x.OwnerId,
-                        principalTable: "DomainUsers",
+                        name: "FK_Columns_Boards_BoardId",
+                        column: x => x.BoardId,
+                        principalTable: "Boards",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -213,26 +227,6 @@ namespace Kanban.Api.Migrations
                         name: "FK_BoardMembers_DomainUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "DomainUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Columns",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    BoardId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Order = table.Column<int>(type: "integer", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Columns", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Columns_Boards_BoardId",
-                        column: x => x.BoardId,
-                        principalTable: "Boards",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -308,11 +302,6 @@ namespace Kanban.Api.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Boards_OwnerId",
-                table: "Boards",
-                column: "OwnerId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Cards_ColumnId",
                 table: "Cards",
                 column: "ColumnId");
@@ -354,13 +343,13 @@ namespace Kanban.Api.Migrations
                 name: "AspNetUsers");
 
             migrationBuilder.DropTable(
+                name: "DomainUsers");
+
+            migrationBuilder.DropTable(
                 name: "Columns");
 
             migrationBuilder.DropTable(
                 name: "Boards");
-
-            migrationBuilder.DropTable(
-                name: "DomainUsers");
         }
     }
 }

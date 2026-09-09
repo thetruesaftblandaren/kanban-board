@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Kanban.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260906222215_InitialCreate")]
+    [Migration("20260909212251_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -42,8 +42,6 @@ namespace Kanban.Api.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("OwnerId");
 
                     b.ToTable("Boards");
                 });
@@ -345,17 +343,6 @@ namespace Kanban.Api.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Kanban.Domain.Entities.Board", b =>
-                {
-                    b.HasOne("Kanban.Domain.Entities.User", "Owner")
-                        .WithMany("OwnedBoards")
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Owner");
-                });
-
             modelBuilder.Entity("Kanban.Domain.Entities.BoardMember", b =>
                 {
                     b.HasOne("Kanban.Domain.Entities.Board", "Board")
@@ -377,24 +364,20 @@ namespace Kanban.Api.Migrations
 
             modelBuilder.Entity("Kanban.Domain.Entities.Card", b =>
                 {
-                    b.HasOne("Kanban.Domain.Entities.Column", "Column")
+                    b.HasOne("Kanban.Domain.Entities.Column", null)
                         .WithMany("Cards")
                         .HasForeignKey("ColumnId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Column");
                 });
 
             modelBuilder.Entity("Kanban.Domain.Entities.Column", b =>
                 {
-                    b.HasOne("Kanban.Domain.Entities.Board", "Board")
+                    b.HasOne("Kanban.Domain.Entities.Board", null)
                         .WithMany("Columns")
                         .HasForeignKey("BoardId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Board");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -463,8 +446,6 @@ namespace Kanban.Api.Migrations
             modelBuilder.Entity("Kanban.Domain.Entities.User", b =>
                 {
                     b.Navigation("BoardMemberships");
-
-                    b.Navigation("OwnedBoards");
                 });
 #pragma warning restore 612, 618
         }

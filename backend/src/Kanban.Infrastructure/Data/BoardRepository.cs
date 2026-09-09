@@ -18,24 +18,26 @@ public class BoardRepository : IBoardRepository
         await _context.Boards.AddAsync(board);
     }
 
-    public async Task AddMemberAsync(BoardMember member)
-    {
-        await _context.BoardMembers.AddAsync(member);
-    }
-
     public Task<Board?> GetByIdAsync(Guid id)
     {
-        return _context.Boards.FirstOrDefaultAsync(b => b.Id == id);
+        return _context.Boards
+            .Include(b => b.Members)
+            .FirstOrDefaultAsync(b => b.Id == id);
+    }
+
+    public Task<Board?> GetByIdWithDetailsAsync(Guid id)
+    {
+        return _context.Boards
+            .Include(b => b.Columns)
+            .ThenInclude(c => c.Cards)
+            .FirstOrDefaultAsync(b => b.Id == id);
     }
 
     public Task<List<Board>> GetForUserAsync(Guid userId)
     {
-        return _context.Boards.Where(b => _context.BoardMembers.Any(bm => bm.BoardId == b.Id && bm.UserId == userId)).ToListAsync();
-    }
-
-    public Task<bool> IsUserMemberAsync(Guid boardId, Guid userId)
-    {
-        return _context.BoardMembers.AnyAsync(bm => bm.BoardId == boardId && bm.UserId == userId);
+        return _context.Boards
+            .Where(b => _context.BoardMembers.Any(bm => bm.BoardId == b.Id && bm.UserId == userId))
+            .ToListAsync();
     }
 
     public Task SaveChangesAsync()
