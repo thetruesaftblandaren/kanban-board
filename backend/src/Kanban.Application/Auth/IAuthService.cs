@@ -1,7 +1,9 @@
+using Kanban.Application.Common;
+
 namespace Kanban.Application.Auth;
 
 public interface IAuthService
 {
-    Task<AuthResult> RegisterAsync(RegisterRequest request);
-    Task<AuthResult> LoginAsync(LoginRequest request);
+    Task<Result<AuthResponse>> RegisterAsync(RegisterRequest request);
+    Task<Result<AuthResponse>> LoginAsync(LoginRequest request);
 }

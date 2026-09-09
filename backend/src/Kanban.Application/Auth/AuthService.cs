@@ -14,30 +14,32 @@ public class AuthService : IAuthService
         _userRepository = userRepository;
     }
 
-    public async Task<AuthResult> RegisterAsync(RegisterRequest request)
+    public async Task<Result<AuthResponse>> RegisterAsync(RegisterRequest request)
     {
-        var (succeeded, errors, userId) = await _identityService.CreateUserAsync(request.Email, request.Password);
+        var createResult = await _identityService.CreateUserAsync(request.Email, request.Password);
 
-        if (!succeeded)
-            return AuthResult.Fail(errors);
+        if (!createResult.Success)
+            return Result<AuthResponse>.Fail(createResult.Errors);
+
+        var userId = createResult.Value;
 
         var domainUser = new User { Id = userId, DisplayName = request.DisplayName };
         await _userRepository.AddAsync(domainUser);
         await _userRepository.SaveChangesAsync();
 
         var token = await _identityService.CreateTokenAsync(userId, request.Email);
-        return AuthResult.Ok(new AuthResponse(token, userId, domainUser.DisplayName));
+        return Result<AuthResponse>.Ok(new AuthResponse(token, userId, domainUser.DisplayName));
     }
 
-    public async Task<AuthResult> LoginAsync(LoginRequest request)
+    public async Task<Result<AuthResponse>> LoginAsync(LoginRequest request)
     {
         var userId = await _identityService.ValidateCredentialsAsync(request.Email, request.Password);
         if (userId is null)
-            return AuthResult.Fail(["Invalid email or password."]);
+            return Result<AuthResponse>.Fail("Invalid email or password.");
 
         var domainUser = await _userRepository.GetByIdAsync(userId.Value);
         var token = await _identityService.CreateTokenAsync(userId.Value, request.Email);
 
-        return AuthResult.Ok(new AuthResponse(token, userId.Value, domainUser?.DisplayName ?? ""));
+        return Result<AuthResponse>.Ok(new AuthResponse(token, userId.Value, domainUser?.DisplayName ?? ""));
     }
 }

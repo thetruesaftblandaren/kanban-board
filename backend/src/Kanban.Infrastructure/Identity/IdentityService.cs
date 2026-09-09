@@ -1,4 +1,5 @@
 using Kanban.Application.Auth;
+using Kanban.Application.Common;
 using Microsoft.AspNetCore.Identity;
 
 namespace Kanban.Infrastructure.Identity;
@@ -14,11 +15,15 @@ public class IdentityService : IIdentityService
         _tokenService = tokenService;
     }
 
-    public async Task<(bool, IEnumerable<string>, Guid)> CreateUserAsync(string email, string password)
+    public async Task<Result<Guid>> CreateUserAsync(string email, string password)
     {
         var appUser = new ApplicationUser { Email = email, UserName = email };
         var result = await _userManager.CreateAsync(appUser, password);
-        return (result.Succeeded, result.Errors.Select(e => e.Description), appUser.Id);
+
+        if (!result.Succeeded)
+            return Result<Guid>.Fail(result.Errors.Select(e => e.Description));
+
+        return Result<Guid>.Ok(appUser.Id);
     }
 
     public async Task<Guid?> ValidateCredentialsAsync(string email, string password)
