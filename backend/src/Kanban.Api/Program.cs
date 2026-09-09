@@ -1,6 +1,7 @@
 using System.Text;
 using Kanban.Application.Auth;
 using Kanban.Application.Boards;
+using Kanban.Application.Columns;
 using Kanban.Application.Common;
 using Kanban.Infrastructure.Data;
 using Kanban.Infrastructure.Identity;
@@ -54,6 +55,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IBoardRepository, BoardRepository>();
 builder.Services.AddScoped<IBoardService, BoardService>();
+builder.Services.AddScoped<IColumnService, ColumnService>();
 
 var app = builder.Build();
 

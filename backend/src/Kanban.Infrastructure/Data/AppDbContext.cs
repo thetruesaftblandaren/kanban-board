@@ -20,6 +20,11 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
     {
         base.OnModelCreating(builder);
 
+        builder.Entity<Board>().Property(b => b.Id).ValueGeneratedNever();
+        builder.Entity<Column>().Property(c => c.Id).ValueGeneratedNever();
+        builder.Entity<Card>().Property(c => c.Id).ValueGeneratedNever();
+        builder.Entity<BoardMember>().Property(m => m.Id).ValueGeneratedNever();
+
         builder.Entity<Board>(b =>
         {
             b.HasKey(x => x.Id);

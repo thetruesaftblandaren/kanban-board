@@ -30,6 +30,7 @@ public class BoardRepository : IBoardRepository
         return _context.Boards
             .Include(b => b.Columns)
             .ThenInclude(c => c.Cards)
+            .Include(b => b.Members)
             .FirstOrDefaultAsync(b => b.Id == id);
     }
 
