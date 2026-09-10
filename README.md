@@ -136,7 +136,7 @@ To be added
 - [x] Board create/read, scoped to authenticated user
 - [x] Column create/read, nested under a board
 - [x] Board refactored into an Aggregate Root (Column/Card only mutable via Board)
-- [ ] Card create/read and move-between-columns
+- [x] Card create/read and move-between-columns
 - [ ] Board member invitations (add non-owner members)
 - [ ] Board / Column / Card update & delete
 - [ ] SignalR hub for real-time updates
