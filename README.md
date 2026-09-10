@@ -2,7 +2,7 @@
 
 A Kanban board with real-time collaboration. When a user moves, creates, or edits a card, every other user viewing the same board will see the update instantly via SignalR, with no page refresh required.
 
-> **Project status: in progress.** Backend data model, database, JWT-based authentication, and Board/Column creation & retrieval (with authorization) are implemented and working, structured with a layered architecture (Domain / Application / Infrastructure / Api) and `Board` as an Aggregate Root. Cards, board member invitations, the SignalR real-time layer, and the React frontend are still being built. See [Roadmap](#roadmap--not-yet-implemented) below for the current state.
+> **Project status: in progress.** Backend data model, database, JWT-based authentication, and full Board → Column → Card creation (with authorization) are implemented and working, structured with a layered architecture (Domain / Application / Infrastructure / Api) and `Board` as an Aggregate Root. Card move-between-columns is implemented. Board member invitations, update/delete endpoints, the SignalR real-time layer, and the React frontend are still being built. See [Roadmap](#roadmap--not-yet-implemented) below for the current state.
 
 ## Why this project
 
@@ -23,10 +23,10 @@ Built as a portfolio project to demonstrate fullstack development skills as a ju
 - Data model and PostgreSQL database with migrations (Board, Column, Card, User, BoardMember)
 - Create and retrieve boards, scoped to the authenticated user (`BoardMember` membership required)
 - Create and retrieve columns within a board
+- Create cards within a column, with title and description
+- Move a card between columns (or reorder within a column), with consistent ordering enforced by the `Board` aggregate
 
 **Planned (MVP):**
-- Create cards within columns, with title and description
-- Drag and drop cards between columns
 - Live updates for all connected users viewing the same board (SignalR)
 
 ### Stretch goals
