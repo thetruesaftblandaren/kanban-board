@@ -37,6 +37,27 @@ public class CardService : ICardService
         }
     }
 
+    public async Task<Result<ICollection<CardResponse>>> GetCardsForColumnAsync(Guid userId, Guid boardId, Guid columnId)
+    {
+        var board = await _boardRepository.GetByIdWithDetailsAsync(boardId);
+        if (board is null)
+            return Result<ICollection<CardResponse>>.Fail("Board not found.");
+
+        if (!board.IsMember(userId))
+            return Result<ICollection<CardResponse>>.Fail("You do not have access to this board.");
+
+        var column = board.Columns.FirstOrDefault(c => c.Id == columnId);
+        if (column is null)
+            return Result<ICollection<CardResponse>>.Fail("Column not found on this board.");
+
+        var response = column.Cards
+            .OrderBy(c => c.Order)
+            .Select(c => new CardResponse(c.Id, c.Title, c.Description, c.ColumnId, c.Order, c.CreatedAt))
+            .ToList();
+
+        return Result<ICollection<CardResponse>>.Ok((ICollection<CardResponse>)response);
+    }
+
     public async Task<Result<CardResponse>> MoveCardAsync(Guid userId, Guid boardId, Guid cardId, MoveCardRequest request)
     {
         var board = await _boardRepository.GetByIdWithDetailsAsync(boardId);

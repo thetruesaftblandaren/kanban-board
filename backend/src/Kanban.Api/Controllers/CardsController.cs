@@ -26,6 +26,15 @@ public class CardsController : ControllerBase
         return result.Success ? Ok(result.Value) : NotFound(result.Errors);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetAll(Guid boardId, Guid columnId)
+    {
+        var userId = GetUserId();
+        var result = await _cardService.GetCardsForColumnAsync(userId, boardId, columnId);
+
+        return result.Success ? Ok(result.Value) : NotFound(result.Errors);
+    }
+
     [HttpPatch("~/api/boards/{boardId}/cards/{cardId}/move")]
     public async Task<IActionResult> Move(Guid boardId, Guid cardId, MoveCardRequest request)
     {
