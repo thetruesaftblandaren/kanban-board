@@ -15,3 +15,11 @@ export async function getCards(boardId: string, columnId: string): Promise<CardR
     const repsonse = await client.get<CardResponse[]>(`/boards/${boardId}/columns/${columnId}/cards`);
     return repsonse.data;
 }
+
+export async function moveCard(boardId: string, cardId: string, targetColumnId: string, newOrder: number): Promise<CardResponse> {
+    const response = await client.patch<CardResponse>(
+        `/boards/${boardId}/cards/${cardId}/move`,
+        { targetColumnId, newOrder }
+    );
+    return response.data;
+}

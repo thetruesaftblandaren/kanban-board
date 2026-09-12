@@ -1,8 +1,16 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getColumns, getCards } from "../api/boards";
+import {
+  DndContext,
+  type DragEndEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { getColumns, getCards, moveCard } from "../api/boards";
 import { getConnection } from "../api/signalr";
 import type { ColumnResponse, CardResponse } from "../types/api";
+import DroppableColumn from "../components/DroppableColumn";
 
 interface CardMovedPayload {
   cardId: string;
@@ -16,6 +24,8 @@ export default function BoardDetailPage() {
   const [cards, setCards] = useState<CardResponse[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const sensors = useSensors(useSensor(PointerSensor));
 
   useEffect(() => {
     if (!boardId) return;
@@ -56,39 +66,72 @@ export default function BoardDetailPage() {
 
     connection.on("CardMoved", handleCardMoved);
 
-    connection.start().then(() => {
-      connection.invoke("JoinBoard", boardId);
-    });
+    async function connectAndJoin() {
+      if (connection.state === "Disconnected") {
+        await connection.start();
+      }
+      if (connection.state === "Connected") {
+        await connection.invoke("JoinBoard", boardId);
+      }
+    }
+
+    connectAndJoin();
 
     return () => {
-      connection.invoke("LeaveBoard", boardId);
       connection.off("CardMoved", handleCardMoved);
+      if (connection.state === "Connected") {
+        connection.invoke("LeaveBoard", boardId).catch(() => {});
+      }
     };
   }, [boardId]);
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || !boardId) return;
+
+    const cardId = active.id as string;
+    const targetColumnId = over.id as string;
+
+    const card = cards.find((c) => c.id === cardId);
+    if (!card || card.columnId === targetColumnId) return;
+
+    const cardsInTargetColumn = cards.filter((c) => c.columnId === targetColumnId);
+    const newOrder = cardsInTargetColumn.length;
+
+    // Spara det gamla state:t så vi kan återställa vid fel
+    const previousCards = cards;
+
+    // Optimistic update: uppdatera UI direkt, innan servern svarar
+    setCards((prevCards) =>
+      prevCards.map((c) =>
+        c.id === cardId ? { ...c, columnId: targetColumnId, order: newOrder } : c
+      )
+    );
+
+    try {
+      await moveCard(boardId, cardId, targetColumnId, newOrder);
+    } catch {
+      setCards(previousCards);
+      setError("Failed to move card. Please try again.");
+    }
+  }
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p style={{ color: "red" }}>{error}</p>;
 
   return (
-    <div style={{ display: "flex", gap: "1rem" }}>
-      {columns
-        .sort((a, b) => a.order - b.order)
-        .map((column) => (
-          <div key={column.id} style={{ border: "1px solid #ccc", padding: "1rem", minWidth: "200px" }}>
-            <h2>{column.name}</h2>
-            <ul>
-              {cards
-                .filter((card) => card.columnId === column.id)
-                .sort((a, b) => a.order - b.order)
-                .map((card) => (
-                  <li key={card.id} style={{ marginBottom: "0.5rem" }}>
-                    <strong>{card.title}</strong>
-                    {card.description && <p>{card.description}</p>}
-                  </li>
-                ))}
-            </ul>
-          </div>
-        ))}
-    </div>
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      <div style={{ display: "flex", gap: "1rem" }}>
+        {columns
+          .sort((a, b) => a.order - b.order)
+          .map((column) => (
+            <DroppableColumn
+              key={column.id}
+              column={column}
+              cards={cards.filter((c) => c.columnId === column.id).sort((a, b) => a.order - b.order)}
+            />
+          ))}
+      </div>
+    </DndContext>
   );
 }

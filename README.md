@@ -2,7 +2,7 @@
 
 A Kanban board with real-time collaboration. When a user moves, creates, or edits a card, every other user viewing the same board will see the update instantly via SignalR, with no page refresh required.
 
-> **Project status: in progress.** Backend (Board → Column → Card CRUD with authorization, JWT auth) and a read-only React frontend (login, board list, board detail view showing columns and cards) are implemented and working, including SignalR. Card drag-and-drop, board member invitations, and update/delete endpoints are still being built. See [Roadmap] below for the current state.
+> **Project status: in progress.** Backend (Board → Column → Card CRUD with authorization, JWT auth), real-time updates via SignalR, and a React frontend with drag-and-drop (login, board list, board detail view) are implemented and working. Board member invitations and update/delete endpoints are still being built. See [Roadmap](#roadmap--not-yet-implemented) below for the current state.
 
 ## Why this project
 
@@ -27,6 +27,7 @@ Built as a portfolio project to demonstrate fullstack development skills as a ju
 - Move a card between columns (or reorder within a column), with consistent ordering enforced by the `Board` aggregate
 - Read-only React frontend: login, board list, and board detail view (columns + cards)
 - Real-time updates via SignalR: card moves are broadcast live to everyone viewing the same board
+- Drag-and-drop card movement (dnd-kit) with optimistic UI updates and automatic rollback on failure
 
 ### Stretch goals
 
@@ -140,7 +141,7 @@ To be added
 - [x] Card create/read and move-between-columns 
 - [x] Read-only React frontend (login, board list, board detail view)
 - [x] SignalR hub for real-time updates (card moves broadcast live to all viewers)
-- [ ] Drag-and-drop for cards (dnd-kit)
+- [x] Drag-and-drop for cards (dnd-kit), with optimistic updates and SignalR sync across clients
 - [ ] Board member invitations (add non-owner members)
 - [ ] Board / Column / Card update & delete
 - [ ] Stretch goals (see above)
