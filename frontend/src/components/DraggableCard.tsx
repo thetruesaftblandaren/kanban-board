@@ -32,7 +32,7 @@ export default function DraggableCard({ card }: Props) {
             {...attributes}
         >
             <strong>{card.title}</strong>
-            {card.description} && <p>{card.description}</p>
+            {card.description && <p>{card.description}</p>}
         </li>
     )
 }
