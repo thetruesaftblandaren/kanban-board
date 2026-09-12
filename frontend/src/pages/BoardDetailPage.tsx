@@ -7,7 +7,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { getColumns, getCards, moveCard } from "../api/boards";
+import { getColumns, getCards, moveCard, createColumn, createCard } from "../api/boards";
 import { getConnection } from "../api/signalr";
 import type { ColumnResponse, CardResponse } from "../types/api";
 import DroppableColumn from "../components/DroppableColumn";
@@ -20,6 +20,7 @@ interface CardMovedPayload {
 
 export default function BoardDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
+  const [newColumnName, setNewColumnName] = useState("");
   const [columns, setColumns] = useState<ColumnResponse[]>([]);
   const [cards, setCards] = useState<CardResponse[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +49,19 @@ export default function BoardDetailPage() {
 
     loadBoard();
   }, [boardId]);
+
+  async function handleCreateColumn(e: React.SubmitEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!newColumnName.trim() || !boardId) return;
+
+    try {
+      const column = await createColumn(boardId, newColumnName);
+      setColumns((prev) => [...prev, column]);
+      setNewColumnName("");
+    } catch {
+      setError("Failed to create column.");
+    }
+  }
 
   useEffect(() => {
     if (!boardId) return;
@@ -121,6 +135,15 @@ export default function BoardDetailPage() {
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      <form onSubmit={handleCreateColumn}>
+        <input
+          value={newColumnName}
+          onChange={((e) => setNewColumnName(e.target.value))}
+          placeholder="New column name"
+        />
+        <button type="submit">Add column</button>
+      </form>
+
       <div style={{ display: "flex", gap: "1rem" }}>
         {columns
           .sort((a, b) => a.order - b.order)
@@ -129,6 +152,8 @@ export default function BoardDetailPage() {
               key={column.id}
               column={column}
               cards={cards.filter((c) => c.columnId === column.id).sort((a, b) => a.order - b.order)}
+              boardId={boardId!}
+              onCardCreated={(card) => setCards((prev) => [...prev, card])}
             />
           ))}
       </div>

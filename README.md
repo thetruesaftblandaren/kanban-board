@@ -139,7 +139,7 @@ To be added
 - [x] Column create/read, nested under a board
 - [x] Board refactored into an Aggregate Root (Column/Card only mutable via Board)
 - [x] Card create/read and move-between-columns 
-- [x] Read-only React frontend (login, board list, board detail view)
+- [x] React frontend: login, board/column/card creation, board detail view with drag-and-drop
 - [x] SignalR hub for real-time updates (card moves broadcast live to all viewers)
 - [x] Drag-and-drop for cards (dnd-kit), with optimistic updates and SignalR sync across clients
 - [ ] Board member invitations (add non-owner members)
