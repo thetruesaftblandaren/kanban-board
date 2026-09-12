@@ -2,7 +2,7 @@
 
 A Kanban board with real-time collaboration. When a user moves, creates, or edits a card, every other user viewing the same board will see the update instantly via SignalR, with no page refresh required.
 
-> **Project status: in progress.** Backend data model, database, JWT-based authentication, and full Board → Column → Card creation (with authorization) are implemented and working, structured with a layered architecture (Domain / Application / Infrastructure / Api) and `Board` as an Aggregate Root. Card move-between-columns is implemented. Board member invitations, update/delete endpoints, the SignalR real-time layer, and the React frontend are still being built. See [Roadmap](#roadmap--not-yet-implemented) below for the current state.
+> **Project status: in progress.** Backend (Board → Column → Card CRUD with authorization, JWT auth) and a read-only React frontend (login, board list, board detail view showing columns and cards) are implemented and working. Card drag-and-drop, board member invitations, update/delete endpoints, and the SignalR real-time layer are still being built. See [Roadmap] below for the current state.
 
 ## Why this project
 
@@ -25,6 +25,7 @@ Built as a portfolio project to demonstrate fullstack development skills as a ju
 - Create and retrieve columns within a board
 - Create cards within a column, with title and description
 - Move a card between columns (or reorder within a column), with consistent ordering enforced by the `Board` aggregate
+- Read-only React frontend: login, board list, and board detail view (columns + cards)
 
 **Planned (MVP):**
 - Live updates for all connected users viewing the same board (SignalR)
@@ -104,7 +105,9 @@ dotnet ef database update
 dotnet run
 ```
 
-### Run the frontend (not yet implemented)
+### Run the frontend
+
+Requires the backend to be running (see above) for API calls to work.
 
 ```bash
 cd frontend
@@ -112,7 +115,7 @@ npm install
 npm run dev
 ```
 
-Once running, the API will be available at `https://localhost:XXXX` (check the console output for the exact port). The frontend does not exist yet.
+Frontend will be available at `http://localhost:5173`.
 
 ## Technical Decisions
 
@@ -136,12 +139,12 @@ To be added
 - [x] Board create/read, scoped to authenticated user
 - [x] Column create/read, nested under a board
 - [x] Board refactored into an Aggregate Root (Column/Card only mutable via Board)
-- [x] Card create/read and move-between-columns
+- [x] Card create/read and move-between-columns 
+- [x] Read-only React frontend (login, board list, board detail view)
+- [ ] Drag-and-drop for cards (dnd-kit)
 - [ ] Board member invitations (add non-owner members)
 - [ ] Board / Column / Card update & delete
 - [ ] SignalR hub for real-time updates
-- [ ] React + TypeScript frontend
-- [ ] Drag-and-drop (dnd-kit)
 - [ ] Stretch goals (see above)
 
 This section is kept up to date as the project progresses, rather than implying the project is further along than it is.
