@@ -6,6 +6,7 @@ using Kanban.Application.Columns;
 using Kanban.Application.Common;
 using Kanban.Infrastructure.Data;
 using Kanban.Infrastructure.Identity;
+using Kanban.Infrastructure.Realtime;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -58,6 +59,7 @@ builder.Services.AddScoped<IBoardRepository, BoardRepository>();
 builder.Services.AddScoped<IBoardService, BoardService>();
 builder.Services.AddScoped<IColumnService, ColumnService>();
 builder.Services.AddScoped<ICardService, CardService>();
+builder.Services.AddScoped<INotificationService, SignalRNotificationService>();
 
 builder.Services.AddCors(options =>
 {
@@ -65,7 +67,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://localhost:5173")
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -75,5 +78,6 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<BoardHub>("/hubs/board");
 
 app.Run();

@@ -141,10 +141,10 @@ To be added
 - [x] Board refactored into an Aggregate Root (Column/Card only mutable via Board)
 - [x] Card create/read and move-between-columns 
 - [x] Read-only React frontend (login, board list, board detail view)
+- [ ] SignalR hub for real-time updates (backend implemented, not yet wired to frontend/tested)
 - [ ] Drag-and-drop for cards (dnd-kit)
 - [ ] Board member invitations (add non-owner members)
 - [ ] Board / Column / Card update & delete
-- [ ] SignalR hub for real-time updates
 - [ ] Stretch goals (see above)
 
 This section is kept up to date as the project progresses, rather than implying the project is further along than it is.

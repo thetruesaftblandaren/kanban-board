@@ -5,10 +5,12 @@ namespace Kanban.Application.Cards;
 public class CardService : ICardService
 {
     private readonly IBoardRepository _boardRepository;
+    private readonly INotificationService _notificationService;
 
-    public CardService(IBoardRepository boardRepository)
+    public CardService(IBoardRepository boardRepository, INotificationService notificationService)
     {
         _boardRepository = boardRepository;
+        _notificationService = notificationService;
     }
 
     public async Task<Result<CardResponse>> CreateCardAsync(Guid userId, Guid boardId, Guid columnId, CreateCardRequest request)
@@ -79,6 +81,8 @@ public class CardService : ICardService
             var movedCard = board.Columns
                 .SelectMany(c => c.Cards)
                 .First(c => c.Id == cardId);
+
+            await _notificationService.NotifyCardMovedAsync(boardId, movedCard.Id, movedCard.ColumnId, movedCard.Order);
 
             return Result<CardResponse>.Ok(new CardResponse(movedCard.Id, movedCard.Title, movedCard.Description, movedCard.ColumnId, movedCard.Order, movedCard.CreatedAt));
         }
