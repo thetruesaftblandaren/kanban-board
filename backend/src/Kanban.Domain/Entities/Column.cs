@@ -32,7 +32,7 @@ public class Column
         return card;
     }
 
-    internal Card RemoveCard(Guid cardId)
+    internal Card DeleteCard(Guid cardId)
     {
         var card = _cards.FirstOrDefault(c => c.Id == cardId)
             ?? throw new InvalidOperationException("Card not found in this column.");

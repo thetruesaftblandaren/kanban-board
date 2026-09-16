@@ -26,6 +26,24 @@ public class CardsController : ControllerBase
         return result.Success ? Ok(result.Value) : NotFound(result.Errors);
     }
 
+    [HttpPut("{cardId}")]
+    public async Task<IActionResult> Update(Guid boardId, Guid columnId, Guid cardId, UpdateCardRequest request)
+    {
+        var userId = GetUserId();
+        var result = await _cardService.UpdateCardAsync(userId, boardId, columnId, cardId, request);
+
+        return result.Success ? Ok(result.Value) : NotFound(result.Errors);
+    }
+
+    [HttpDelete("{cardId}")]
+    public async Task<IActionResult> Delete(Guid boardId, Guid columnId, Guid cardId)
+    {
+        var userId = GetUserId();
+        var result = await _cardService.DeleteCardAsync(userId, boardId, columnId, cardId);
+
+        return result.Success ? Ok(result.Value) : NotFound(result.Errors);
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAll(Guid boardId, Guid columnId)
     {

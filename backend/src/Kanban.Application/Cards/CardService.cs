@@ -1,4 +1,5 @@
 using Kanban.Application.Common;
+using Kanban.Domain.Entities;
 
 namespace Kanban.Application.Cards;
 
@@ -30,6 +31,8 @@ public class CardService : ICardService
         {
             var card = board.AddCard(columnId, request.Title, request.Description);
             await _boardRepository.SaveChangesAsync();
+
+            await _notificationService.NotifyCardCreatedAsync(boardId, card.Id, columnId, card.Title, card.Description, card.Order);
 
             return Result<CardResponse>.Ok(new CardResponse(card.Id, card.Title, card.Description, card.ColumnId, card.Order, card.CreatedAt));
         }
@@ -89,6 +92,64 @@ public class CardService : ICardService
         catch (InvalidOperationException ex)
         {
             return Result<CardResponse>.Fail(ex.Message);
+        }
+    }
+
+    public async Task<Result<CardResponse>> UpdateCardAsync(Guid userId, Guid boardId, Guid columnId, Guid cardId, UpdateCardRequest request)
+    {
+        var board = await _boardRepository.GetByIdWithDetailsAsync(boardId);
+        if (board is null)
+        {
+            return Result<CardResponse>.Fail("Board not found.");
+        }
+
+        if (!board.IsMember(userId))
+        {
+            return Result<CardResponse>.Fail("You do not have access to this board.");
+        }
+
+        try
+        {
+            board.UpdateCard(columnId, cardId, request.Title, request.Description);
+            await _boardRepository.SaveChangesAsync();
+
+            var card = board.Columns.First(c => c.Id == columnId).Cards.First(c => c.Id == cardId);
+
+            await _notificationService.NotifyCardUpdatedAsync(boardId, card.Id, card.Title, card.Description);
+
+            return Result<CardResponse>.Ok(new CardResponse(card.Id, card.Title, card.Description, card.ColumnId, card.Order, card.CreatedAt));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Result<CardResponse>.Fail(ex.Message);
+        }
+    }
+
+    public async Task<Result<bool>> DeleteCardAsync(Guid userId, Guid boardId, Guid columnId, Guid cardId)
+    {
+        var board = await _boardRepository.GetByIdWithDetailsAsync(boardId);
+        if (board is null)
+        {
+            return Result<bool>.Fail("Board not found.");
+        }
+
+        if (!board.IsMember(userId))
+        {
+            return Result<bool>.Fail("You do not have access to this board.");
+        }
+
+        try
+        {
+            board.DeleteCard(columnId, cardId);
+            await _boardRepository.SaveChangesAsync();
+
+            await _notificationService.NotifyCardDeletedAsync(boardId, cardId);
+
+            return Result<bool>.Ok(true);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Result<bool>.Fail(ex.Message);
         }
     }
 }

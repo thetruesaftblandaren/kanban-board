@@ -55,6 +55,25 @@ public class Board
         return column.AddCard(title, description);
     }
 
+    public void UpdateCard(Guid columnId, Guid cardId, string title, string? description)
+    {
+        var column = _columns.FirstOrDefault(c => c.Id == columnId)
+            ?? throw new InvalidOperationException("Column not found on this board.");
+
+        var card = column.Cards.FirstOrDefault(c => c.Id == cardId)
+            ?? throw new InvalidOperationException("Column not found on this board.");
+
+        card.Update(title, description);
+    }
+
+    public void DeleteCard(Guid columnId, Guid cardId)
+    {
+        var column = _columns.FirstOrDefault(c => c.Id == columnId)
+            ?? throw new InvalidOperationException("Column not found on this board.");
+
+        column.DeleteCard(cardId);
+    }
+
     public void MoveCard(Guid cardId, Guid targetColumnId, int newOrder)
     {
         var sourceColumn = _columns.FirstOrDefault(c => c.Cards.Any(card => card.Id == cardId))
@@ -63,7 +82,7 @@ public class Board
         var targetColumn = _columns.FirstOrDefault(c => c.Id == targetColumnId)
             ?? throw new InvalidOperationException("Target column not found on this board.");
         
-        var card = sourceColumn.RemoveCard(cardId);
+        var card = sourceColumn.DeleteCard(cardId);
         targetColumn.InsertCard(card, newOrder);
     }
 }

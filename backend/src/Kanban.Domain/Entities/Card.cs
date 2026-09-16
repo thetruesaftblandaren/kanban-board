@@ -24,6 +24,12 @@ public class Card
         };
     }
 
+    internal void Update(string title, string? description)
+    {
+        Title = title;
+        Description = description;
+    }
+
     internal void SetOrder(int order)
     {
         Order = order;
