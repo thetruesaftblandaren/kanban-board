@@ -8,10 +8,13 @@ interface Props {
     column: ColumnResponse;
     cards: CardResponse[];
     boardId: string;
-    onCardCreated: (card: CardResponse) => void;
 }
 
-export default function DroppableColumn({ column, cards, boardId, onCardCreated }: Props) {
+export default function DroppableColumn({
+    column,
+    cards,
+    boardId,
+}: Props) {
     const { setNodeRef, isOver } = useDroppable({ id: column.id });
     const [newCardTitle, setNewCardTitle] = useState("");
     const [newCardDescription, setNewCardDescription] = useState("");
@@ -21,13 +24,13 @@ export default function DroppableColumn({ column, cards, boardId, onCardCreated 
         if (!newCardTitle.trim()) return;
 
         try {
-            const card = await createCard(boardId,
+            await createCard(boardId,
                 column.id,
                 newCardTitle,
                 newCardDescription
             );
-            onCardCreated(card);
             setNewCardTitle("");
+            setNewCardDescription("");
         } catch {
             console.error("Failed to create card")
         }
@@ -46,7 +49,11 @@ export default function DroppableColumn({ column, cards, boardId, onCardCreated 
             <h2>{column.name}</h2>
             <ul style={{ listStyle: "none", padding: 0 }}>
                 {cards.map((card) => (
-                    <DraggableCard key={card.id} card={card} />
+                    <DraggableCard
+                        key={card.id}
+                        card={card}
+                        boardId={boardId}
+                    />
                 ))}
             </ul>
 

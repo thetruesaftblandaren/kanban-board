@@ -7,7 +7,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { getColumns, getCards, moveCard, createColumn, createCard } from "../api/boards";
+import { getColumns, getCards, moveCard, createColumn } from "../api/boards";
 import { getConnection } from "../api/signalr";
 import type { ColumnResponse, CardResponse } from "../types/api";
 import DroppableColumn from "../components/DroppableColumn";
@@ -16,6 +16,24 @@ interface CardMovedPayload {
   cardId: string;
   columnId: string;
   newOrder: number;
+}
+
+interface CardCreatedPayload {
+  cardId: string;
+  columnId: string;
+  title: string;
+  description: string | null;
+  order: number;
+}
+
+interface CardUpdatedPayload {
+  cardId: string;
+  title: string;
+  description: string | null;
+}
+
+interface CardDeletedPayload {
+  cardId: string;
 }
 
 export default function BoardDetailPage() {
@@ -78,7 +96,41 @@ export default function BoardDetailPage() {
       );
     }
 
+    function handleCardCreated(payload: CardCreatedPayload) {
+      setCards((prevCards) => {
+        if (prevCards.some((c) => c.id === payload.cardId)) return prevCards;
+        return [
+          ...prevCards,
+          {
+            id: payload.cardId,
+            columnId: payload.columnId,
+            title: payload.title,
+            description: payload.description,
+            order: payload.order,
+            createdAt: new Date().toISOString(),
+          },
+        ];
+      });
+    }
+
+    function handleCardUpdated(payload: CardUpdatedPayload) {
+      setCards((prevCards) =>
+        prevCards.map((card) =>
+          card.id === payload.cardId
+            ? { ...card, title: payload.title, description: payload.description }
+            : card
+        )
+      );
+    }
+
+    function handleCardDeleted(payload: CardDeletedPayload) {
+      setCards((prevCards) => prevCards.filter((card) => card.id !== payload.cardId));
+    }
+
     connection.on("CardMoved", handleCardMoved);
+    connection.on("CardCreated", handleCardCreated);
+    connection.on("CardUpdated", handleCardUpdated);
+    connection.on("CardDeleted", handleCardDeleted);
 
     async function connectAndJoin() {
       if (connection.state === "Disconnected") {
@@ -93,6 +145,9 @@ export default function BoardDetailPage() {
 
     return () => {
       connection.off("CardMoved", handleCardMoved);
+      connection.off("CardCreated", handleCardCreated);
+      connection.off("CardUpdated", handleCardUpdated);
+      connection.off("CardDeleted", handleCardDeleted);
       if (connection.state === "Connected") {
         connection.invoke("LeaveBoard", boardId).catch(() => {});
       }
@@ -153,7 +208,6 @@ export default function BoardDetailPage() {
               column={column}
               cards={cards.filter((c) => c.columnId === column.id).sort((a, b) => a.order - b.order)}
               boardId={boardId!}
-              onCardCreated={(card) => setCards((prev) => [...prev, card])}
             />
           ))}
       </div>

@@ -21,13 +21,13 @@ Built as a portfolio project to demonstrate fullstack development skills as a ju
 **Implemented:**
 - User registration and login (JWT-based, via ASP.NET Core Identity)
 - Data model and PostgreSQL database with migrations (Board, Column, Card, User, BoardMember)
-- Create and retrieve boards, scoped to the authenticated user (`BoardMember` membership required)
-- Create and retrieve columns within a board
-- Create cards within a column, with title and description
+- `Board` modeled as an Aggregate Root: Column/Card are only ever created or mutated through Board
+- Full Board/Column/Card create and read, scoped to the authenticated user (`BoardMember` membership required)
+- Card update and delete
 - Move a card between columns (or reorder within a column), with consistent ordering enforced by the `Board` aggregate
-- Read-only React frontend: login, board list, and board detail view (columns + cards)
-- Real-time updates via SignalR: card moves are broadcast live to everyone viewing the same board
+- React frontend: login, board list, board detail view, and create/edit/delete forms for boards, columns, and cards
 - Drag-and-drop card movement (dnd-kit) with optimistic UI updates and automatic rollback on failure
+- Real-time updates via SignalR: card creation, updates, deletion, and moves are all broadcast live to everyone viewing the same board. SignalR is the single source of truth for card state changes in the frontend, avoiding duplicate-update bugs from having two independent update paths
 
 ### Stretch goals
 
@@ -135,15 +135,15 @@ To be added
 
 - [x] Data model + PostgreSQL database + migrations
 - [x] User registration and login (JWT)
-- [x] Board create/read, scoped to authenticated user
-- [x] Column create/read, nested under a board
 - [x] Board refactored into an Aggregate Root (Column/Card only mutable via Board)
-- [x] Card create/read and move-between-columns 
-- [x] React frontend: login, board/column/card creation, board detail view with drag-and-drop
-- [x] SignalR hub for real-time updates (card moves broadcast live to all viewers)
-- [x] Drag-and-drop for cards (dnd-kit), with optimistic updates and SignalR sync across clients
+- [x] Board / Column create and read, scoped to authenticated user
+- [x] Card create, read, update, and delete
+- [x] Move a card between columns (or reorder within a column)
+- [x] React frontend: login, board/column/card creation and editing, board detail view with drag-and-drop
+- [x] SignalR real-time updates for all card operations (create, update, delete, move), single source of truth for card state
+- [x] Drag-and-drop for cards (dnd-kit), with optimistic updates and automatic rollback on failure
 - [ ] Board member invitations (add non-owner members)
-- [ ] Board / Column / Card update & delete
+- [ ] Column / Board update & delete
 - [ ] Stretch goals (see above)
 
 This section is kept up to date as the project progresses, rather than implying the project is further along than it is.

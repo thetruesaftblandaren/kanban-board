@@ -33,6 +33,24 @@ export async function createCard(boardId: string, columnId: string, title: strin
     return response.data;
 }
 
+export async function updateCard(
+    boardId: string,
+    columnId: string,
+    cardId: string,
+    title: string,
+    description: string | null
+): Promise<CardResponse> {
+    const response = await client.put<CardResponse>(
+        `/boards/${boardId}/columns/${columnId}/cards/${cardId}`,
+        { title, description }
+    );
+    return response.data;
+}
+
+export async function deleteCard(boardId: string, columnId: string, cardId: string): Promise<void> {
+    await client.delete(`/boards/${boardId}/columns/${columnId}/cards/${cardId}`);
+}
+
 export async function moveCard(boardId: string, cardId: string, targetColumnId: string, newOrder: number): Promise<CardResponse> {
     const response = await client.patch<CardResponse>(
         `/boards/${boardId}/cards/${cardId}/move`,
