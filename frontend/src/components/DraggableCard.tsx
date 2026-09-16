@@ -41,12 +41,12 @@ export default function DraggableCard({ card, boardId }: Props) {
         if (!title.trim()) return;
 
         try {
-            const updated = await updateCard(
-                boardId,
-                card.columnId,
-                card.id,
-                title,
-                description.trim() ? description : null
+            await updateCard(
+            boardId,
+            card.columnId,
+            card.id,
+            title,
+            description.trim() ? description : null
             );
             setIsEditing(false);
         } catch {
