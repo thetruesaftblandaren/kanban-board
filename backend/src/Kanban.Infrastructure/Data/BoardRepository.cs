@@ -41,6 +41,12 @@ public class BoardRepository : IBoardRepository
             .ToListAsync();
     }
 
+    public async Task DeleteAsync(Board board)
+    {
+        _context.Boards.Remove(board);
+        await Task.CompletedTask;
+    }
+
     public Task SaveChangesAsync()
     {
         return _context.SaveChangesAsync();

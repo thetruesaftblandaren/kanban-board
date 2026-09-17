@@ -7,4 +7,6 @@ public interface IBoardService
     Task<Result<BoardResponse>> CreateBoardAsync(Guid userId, CreateBoardRequest request);
     Task<ICollection<BoardResponse>> GetBoardsForUserAsync(Guid userId);
     Task<Result<BoardResponse>> GetBoardByIdAsync(Guid userId, Guid boardId);
+    Task<Result<BoardResponse>> RenameBoardAsync(Guid userId, Guid boardId, UpdateBoardRequest request);
+    Task<Result<bool>> DeleteBoardAsync(Guid userId, Guid boardId);
 }

@@ -13,6 +13,12 @@ public class Board
     public IReadOnlyCollection<Column> Columns => _columns.AsReadOnly();
     public IReadOnlyCollection<BoardMember> Members => _members.AsReadOnly();
 
+    public bool IsMember(Guid userId)
+    {
+        return _members.Any(m => m.UserId == userId);
+    }
+
+
     public static Board Create(string name, Guid ownerId)
     {
         var board = new Board
@@ -34,9 +40,9 @@ public class Board
         return board;
     }
 
-    public bool IsMember(Guid userId)
+    public void Rename(string name)
     {
-        return _members.Any(m => m.UserId == userId);
+        Name = name;
     }
 
     public Column AddColumn(string name)
@@ -45,6 +51,22 @@ public class Board
         var column = Column.Create(name, Id, order);
         _columns.Add(column);
         return column;
+    }
+
+    public void RenameColumn(Guid columnId, string name)
+    {
+        var column = _columns.FirstOrDefault((c) => c.Id == columnId)
+            ?? throw new InvalidOperationException("Column not found on this board.");
+
+        column.Rename(name);
+    }
+
+    public void DeleteColumn(Guid columnId)
+    {
+        var column = _columns.FirstOrDefault((c) => c.Id == columnId)
+            ?? throw new InvalidOperationException("Column not found on this board.");
+
+        _columns.Remove(column);
     }
 
     public Card AddCard(Guid columnId, string title, string? description)

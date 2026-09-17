@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   DndContext,
   type DragEndEvent,
@@ -7,10 +7,34 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { getColumns, getCards, moveCard, createColumn } from "../api/boards";
+import { getColumns, getCards, moveCard, createColumn, getBoardById, updateBoard, deleteBoard } from "../api/boards";
 import { getConnection } from "../api/signalr";
 import type { ColumnResponse, CardResponse } from "../types/api";
 import DroppableColumn from "../components/DroppableColumn";
+
+interface BoardRenamedPayload {
+  boardId: string;
+  name: string;
+}
+
+interface BoardDeletedPayload {
+  boardId: string;
+}
+
+interface ColumnCreatedPayload {
+  columnId: string;
+  name: string;
+  order: number;
+}
+
+interface ColumnRenamedPayload {
+  columnId: string;
+  name: string;
+}
+
+interface ColumnDeletedPayload {
+  columnId: string;
+}
 
 interface CardMovedPayload {
   cardId: string;
@@ -38,6 +62,9 @@ interface CardDeletedPayload {
 
 export default function BoardDetailPage() {
   const { boardId } = useParams<{ boardId: string }>();
+  const [boardName, setBoardName] = useState("");
+  const [isEditingBoard, setIsEditingBoard] = useState(false);
+  const navigate = useNavigate();
   const [newColumnName, setNewColumnName] = useState("");
   const [columns, setColumns] = useState<ColumnResponse[]>([]);
   const [cards, setCards] = useState<CardResponse[]>([]);
@@ -51,6 +78,9 @@ export default function BoardDetailPage() {
 
     async function loadBoard() {
       try {
+        const board = await getBoardById(boardId!);
+        setBoardName(board.name);
+
         const columnList = await getColumns(boardId!);
         const cardLists = await Promise.all(
           columnList.map((column) => getCards(boardId!, column.id))
@@ -68,13 +98,35 @@ export default function BoardDetailPage() {
     loadBoard();
   }, [boardId]);
 
+  async function handleUpdateBoardName(e: React.SubmitEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!boardName.trim() || !boardId) return;
+
+    try {
+      await updateBoard(boardId, boardName)
+      setIsEditingBoard(false);
+    } catch {
+      setError("Failed to update board name.");
+    }
+  }
+
+  async function handleDeleteBoard() {
+    if (!boardId) return;
+
+    try {
+      await deleteBoard(boardId);
+      navigate("/boards");
+    } catch {
+      setError("Failed to delete board. Only the owner can delete the board.");
+    }
+  }
+
   async function handleCreateColumn(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!newColumnName.trim() || !boardId) return;
 
     try {
-      const column = await createColumn(boardId, newColumnName);
-      setColumns((prev) => [...prev, column]);
+      await createColumn(boardId, newColumnName);
       setNewColumnName("");
     } catch {
       setError("Failed to create column.");
@@ -85,6 +137,36 @@ export default function BoardDetailPage() {
     if (!boardId) return;
 
     const connection = getConnection();
+
+    function handleBoardRenamed(payload: BoardRenamedPayload) {
+      setBoardName(payload.name);
+    }
+
+    function handleBoardDeleted() {
+      setError("This board has been deleted by its owner.");
+      setTimeout(() => navigate("/boards"), 2000);
+    }
+
+    function handleColumnCreated(payload: ColumnCreatedPayload) {
+      setColumns((prevColumns) => {
+        if (prevColumns.some((c) => c.id === payload.columnId)) return prevColumns;
+        return [ ...prevColumns, { id: payload.columnId, name: payload.name, boardId: boardId!, order: payload.order} ];
+      })
+    }
+
+    function handleColumnRenamed(payload: ColumnRenamedPayload) {
+      setColumns((prevColumns) => 
+        prevColumns.map((c) =>
+          c.id === payload.columnId
+            ? { ...c, name: payload.name } : c)
+      );
+    }
+
+    function handleColumnDeleted(payload: ColumnDeletedPayload) {
+      setColumns((prevColumns) =>
+        prevColumns.filter((c) => c.id !== payload.columnId))
+        setCards((prevCards) => prevCards.filter((c) => c.columnId !== payload.columnId));
+    }
 
     function handleCardMoved(payload: CardMovedPayload) {
       setCards((prevCards) =>
@@ -127,6 +209,11 @@ export default function BoardDetailPage() {
       setCards((prevCards) => prevCards.filter((card) => card.id !== payload.cardId));
     }
 
+    connection.on("BoardRenamed", handleBoardRenamed);
+    connection.on("BoardDeleted", handleBoardDeleted);
+    connection.on("ColumnCreated", handleColumnCreated);
+    connection.on("ColumnRenamed", handleColumnRenamed);
+    connection.on("ColumnDeleted", handleColumnDeleted);
     connection.on("CardMoved", handleCardMoved);
     connection.on("CardCreated", handleCardCreated);
     connection.on("CardUpdated", handleCardUpdated);
@@ -144,6 +231,11 @@ export default function BoardDetailPage() {
     connectAndJoin();
 
     return () => {
+      connection.off("BoardRenamed", handleBoardRenamed);
+      connection.off("BoardDeleted", handleBoardDeleted);
+      connection.off("ColumnCreated", handleColumnCreated);
+      connection.off("ColumnRenamed", handleColumnRenamed);
+      connection.off("ColumnDeleted", handleColumnDeleted);
       connection.off("CardMoved", handleCardMoved);
       connection.off("CardCreated", handleCardCreated);
       connection.off("CardUpdated", handleCardUpdated);
@@ -167,10 +259,8 @@ export default function BoardDetailPage() {
     const cardsInTargetColumn = cards.filter((c) => c.columnId === targetColumnId);
     const newOrder = cardsInTargetColumn.length;
 
-    // Spara det gamla state:t så vi kan återställa vid fel
     const previousCards = cards;
 
-    // Optimistic update: uppdatera UI direkt, innan servern svarar
     setCards((prevCards) =>
       prevCards.map((c) =>
         c.id === cardId ? { ...c, columnId: targetColumnId, order: newOrder } : c
@@ -190,6 +280,19 @@ export default function BoardDetailPage() {
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      {isEditingBoard ? (
+        <form onSubmit={handleUpdateBoardName}>
+          <input value={boardName} onChange={(e) => setBoardName(e.target.value)} />
+          <button type="submit">Save</button>
+          <button type="button" onClick={() => { setBoardName(boardName); setIsEditingBoard(false); }}>Cancel</button>
+        </form>
+      ) : (
+        <div>
+          <h1 style={{ display: "inline" }}>{boardName}</h1>
+          <button type="button" onClick={() => setIsEditingBoard(true)}>Edit</button>
+          <button type="button" onClick={handleDeleteBoard}>Delete board</button>
+        </div>
+      )}
       <form onSubmit={handleCreateColumn}>
         <input
           value={newColumnName}

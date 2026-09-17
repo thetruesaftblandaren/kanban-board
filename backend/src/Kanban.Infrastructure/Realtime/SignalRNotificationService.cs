@@ -1,4 +1,5 @@
 using Kanban.Application.Common;
+using Kanban.Domain.Entities;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Kanban.Infrastructure.Realtime;
@@ -11,6 +12,54 @@ public class SignalRNotificationService : INotificationService
     {
         _hubContext = hubContext;
     }
+
+    /* Boards */
+
+    public async Task NotifyBoardCreatedAsync(Guid boardId, string name)
+    {
+        await _hubContext.Clients
+            .Group(BoardHub.GroupName(boardId.ToString()))
+            .SendAsync("BoardCreated", new { boardId, name });
+    }
+
+    public async Task NotifyBoardRenamedAsync(Guid boardId, string name)
+    {
+        await _hubContext.Clients
+            .Group(BoardHub.GroupName(boardId.ToString()))
+            .SendAsync("BoardRenamed", new { boardId, name });
+    }
+
+    public async Task NotifyBoardDeletedAsync(Guid boardId)
+    {
+        await _hubContext.Clients
+            .Group(BoardHub.GroupName(boardId.ToString()))
+            .SendAsync("BoardDeleted", new { boardId });
+    }
+
+    /* Columns */
+
+    public async Task NotifyColumnCreatedAsync(Guid boardId, Guid columnId, string name, int order)
+    {
+        await _hubContext.Clients
+            .Group(BoardHub.GroupName(boardId.ToString()))
+            .SendAsync("ColumnCreated", new { columnId, name, order });
+    }
+
+    public async Task NotifyColumnRenamedAsync(Guid boardId, Guid columnId, string name)
+    {
+        await _hubContext.Clients
+            .Group(BoardHub.GroupName(boardId.ToString()))
+            .SendAsync("ColumnRenamed", new { columnId, name });
+    }
+
+    public async Task NotifyColumnDeletedAsync(Guid boardId, Guid columnId)
+    {
+        await _hubContext.Clients
+            .Group(BoardHub.GroupName(boardId.ToString()))
+            .SendAsync("ColumnDeleted", new { columnId });
+    }
+
+    /* Cards */
 
     public async Task NotifyCardMovedAsync(Guid boardId, Guid cardId, Guid columnId, int newOrder)
     {

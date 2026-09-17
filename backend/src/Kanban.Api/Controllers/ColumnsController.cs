@@ -35,6 +35,24 @@ public class ColumnsController : ControllerBase
         return result.Success ? Ok(result.Value) : NotFound(result.Errors);
     }
 
+    [HttpPut("{columnId}")]
+    public async Task<IActionResult> Update(Guid boardId, Guid columnId, UpdateColumnRequest request)
+    {
+        var userId = GetUserId();
+        var result = await _columnService.RenameColumnAsync(userId, boardId, columnId, request);
+        
+        return result.Success ? Ok(result.Value) : NotFound(result.Errors);
+    }
+
+    [HttpDelete("{columnId}")]
+    public async Task<IActionResult> Delete(Guid boardId, Guid columnId)
+    {
+        var userId = GetUserId();
+        var result = await _columnService.DeleteColumnAsync(userId, boardId, columnId);
+
+        return result.Success ? Ok(result.Value) : NotFound(result.Errors);
+    }
+
     private Guid GetUserId()
     {
         var sub =  User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");

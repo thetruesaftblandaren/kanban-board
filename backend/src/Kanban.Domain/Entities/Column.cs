@@ -32,6 +32,11 @@ public class Column
         return card;
     }
 
+    internal void Rename(string name)
+    {
+        Name = name;
+    }
+
     internal Card DeleteCard(Guid cardId)
     {
         var card = _cards.FirstOrDefault(c => c.Id == cardId)

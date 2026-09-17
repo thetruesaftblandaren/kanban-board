@@ -46,6 +46,24 @@ public class BoardsController : ControllerBase
         return result.Success ? Ok(result.Value) : NotFound(result.Errors);
     }
 
+    [HttpPut("{Id}")]
+    public async Task<IActionResult> Update(Guid id, UpdateBoardRequest request)
+    {
+        var userId = GetUserId();
+        var result = await _boardService.RenameBoardAsync(userId, id, request);
+
+        return result.Success ? Ok(result.Value) : NotFound(result.Errors);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var userId = GetUserId();
+        var result = await _boardService.DeleteBoardAsync(userId, id);
+
+        return result.Success ? Ok(result.Value) : NotFound(result.Errors);
+    }
+
     private Guid GetUserId()
     {
         var sub = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
