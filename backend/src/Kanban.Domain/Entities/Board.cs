@@ -21,6 +21,9 @@ public class Board
 
     public static Board Create(string name, Guid ownerId)
     {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Board name cannot be empty.", nameof(name));
+
         var board = new Board
         {
             Id = Guid.NewGuid(),
@@ -42,11 +45,17 @@ public class Board
 
     public void Rename(string name)
     {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Board name cannot be empty.", nameof(name));
+
         Name = name;
     }
 
     public Column AddColumn(string name)
     {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Column name cannot be empty.", nameof(name));
+
         var order = _columns.Count;
         var column = Column.Create(name, Id, order);
         _columns.Add(column);

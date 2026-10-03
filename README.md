@@ -142,6 +142,7 @@ To be added
 - [x] React frontend: login, board/column/card creation and editing, board detail view with drag-and-drop
 - [x] SignalR real-time updates for all card operations (create, update, delete, move), single source of truth for card state
 - [x] Drag-and-drop for cards (dnd-kit), with optimistic updates and automatic rollback on failure
+- [x] Error handling
 - [ ] Board member invitations (add non-owner members)
 - [ ] Column / Board update & delete
 - [ ] Stretch goals (see above)

@@ -16,14 +16,21 @@ public class BoardService : IBoardService
 
     public async Task<Result<BoardResponse>> CreateBoardAsync(Guid userId, CreateBoardRequest request)
     {
-        var board = Board.Create(request.Name, userId);
+        try
+        {
+            var board = Board.Create(request.Name, userId);
 
-        await _boardRepository.AddAsync(board);
-        await _boardRepository.SaveChangesAsync();
+            await _boardRepository.AddAsync(board);
+            await _boardRepository.SaveChangesAsync();
 
-        await _notificationService.NotifyBoardCreatedAsync(board.Id, board.Name);
+            await _notificationService.NotifyBoardCreatedAsync(board.Id, board.Name);
 
-        return Result<BoardResponse>.Ok(new BoardResponse(board.Id, board.Name, board.OwnerId, board.CreatedAt));
+            return Result<BoardResponse>.Ok(new BoardResponse(board.Id, board.Name, board.OwnerId, board.CreatedAt));
+        }
+        catch (ArgumentException ex)
+        {
+            return Result<BoardResponse>.Fail(ex.Message);
+        }
     }
 
     public async Task<ICollection<BoardResponse>> GetBoardsForUserAsync(Guid userId)
@@ -58,12 +65,20 @@ public class BoardService : IBoardService
         if (!board.IsMember(userId))
             return Result<BoardResponse>.Fail("You do not have access to this board.");
 
-        board.Rename(request.Name);
-        await _boardRepository.SaveChangesAsync();
+        try
+        {
+            board.Rename(request.Name);
+            await _boardRepository.SaveChangesAsync();
 
-        await _notificationService.NotifyBoardRenamedAsync(board.Id, board.Name);
+            await _notificationService.NotifyBoardRenamedAsync(board.Id, board.Name);
 
-        return Result<BoardResponse>.Ok(new BoardResponse(board.Id, board.Name, board.OwnerId, board.CreatedAt));
+            return Result<BoardResponse>.Ok(new BoardResponse(board.Id, board.Name, board.OwnerId, board.CreatedAt)); 
+        }
+        catch (ArgumentException ex)
+        {
+            return Result<BoardResponse>.Fail(ex.Message);
+        }
+
     }
 
     public async Task<Result<bool>> DeleteBoardAsync(Guid userId, Guid boardId)

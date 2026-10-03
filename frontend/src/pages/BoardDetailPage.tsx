@@ -9,16 +9,12 @@ import {
 } from "@dnd-kit/core";
 import { getColumns, getCards, moveCard, createColumn, getBoardById, updateBoard, deleteBoard } from "../api/boards";
 import { getConnection } from "../api/signalr";
-import type { ColumnResponse, CardResponse } from "../types/api";
+import type { ColumnResponse, CardResponse, BoardResponse } from "../types/api";
 import DroppableColumn from "../components/DroppableColumn";
 
 interface BoardRenamedPayload {
   boardId: string;
   name: string;
-}
-
-interface BoardDeletedPayload {
-  boardId: string;
 }
 
 interface ColumnCreatedPayload {
@@ -60,15 +56,25 @@ interface CardDeletedPayload {
   cardId: string;
 }
 
+// The displayed boardname becomes empty upon trying to set it to an empty string (and failing). Don't know how to fix it since board isn't added in this function.
 export default function BoardDetailPage() {
+  const [board, setBoard] = useState<BoardResponse | null>(null);
   const { boardId } = useParams<{ boardId: string }>();
   const [boardName, setBoardName] = useState("");
   const [isEditingBoard, setIsEditingBoard] = useState(false);
+  const [boardActionError, setBoardActionError] = useState<string | null>(null);
+
   const navigate = useNavigate();
+
   const [newColumnName, setNewColumnName] = useState("");
   const [columns, setColumns] = useState<ColumnResponse[]>([]);
+  const [createColumnError, setCreateColumnError] = useState<string | null>(null);
+  const [updateColumnError, setUpdateColumnError] = useState<string | null>(null);
+  const [deleteColumnError, setDeleteColumnError] = useState<string | null>(null);
+
   const [cards, setCards] = useState<CardResponse[]>([]);
-  const [error, setError] = useState<string | null>(null);
+
+  const [loadBoardError, setLoadBoardError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const sensors = useSensors(useSensor(PointerSensor));
@@ -79,6 +85,7 @@ export default function BoardDetailPage() {
     async function loadBoard() {
       try {
         const board = await getBoardById(boardId!);
+        setBoard(board);
         setBoardName(board.name);
 
         const columnList = await getColumns(boardId!);
@@ -89,7 +96,7 @@ export default function BoardDetailPage() {
         setColumns(columnList);
         setCards(cardLists.flat());
       } catch {
-        setError("Failed to load board.");
+        setLoadBoardError("Failed to load board.");
       } finally {
         setLoading(false);
       }
@@ -100,15 +107,22 @@ export default function BoardDetailPage() {
 
   async function handleUpdateBoardName(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!boardName.trim() || !boardId) return;
+    if (!boardId) return;
 
     try {
       await updateBoard(boardId, boardName)
+
+      setBoard((prev) =>
+        prev ? { ...prev, name: boardName } : prev
+      );
+
       setIsEditingBoard(false);
     } catch {
-      setError("Failed to update board name.");
+      setBoardActionError("Failed to update board name.");
     }
   }
+
+  
 
   async function handleDeleteBoard() {
     if (!boardId) return;
@@ -117,19 +131,19 @@ export default function BoardDetailPage() {
       await deleteBoard(boardId);
       navigate("/boards");
     } catch {
-      setError("Failed to delete board. Only the owner can delete the board.");
+      setBoardActionError("Failed to delete board. Only the owner can delete the board.");
     }
   }
 
   async function handleCreateColumn(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!newColumnName.trim() || !boardId) return;
+    if (!boardId) return;
 
     try {
       await createColumn(boardId, newColumnName);
       setNewColumnName("");
     } catch {
-      setError("Failed to create column.");
+      setCreateColumnError("Failed to create column.");
     }
   }
 
@@ -143,7 +157,7 @@ export default function BoardDetailPage() {
     }
 
     function handleBoardDeleted() {
-      setError("This board has been deleted by its owner.");
+      setLoadBoardError("This board has been deleted by its owner.");
       setTimeout(() => navigate("/boards"), 2000);
     }
 
@@ -271,32 +285,45 @@ export default function BoardDetailPage() {
       await moveCard(boardId, cardId, targetColumnId, newOrder);
     } catch {
       setCards(previousCards);
-      setError("Failed to move card. Please try again.");
+      console.error("Failed to move card. Please try again.");
     }
   }
 
   if (loading) return <p>Loading...</p>;
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
+  if (loadBoardError) return <p style={{ color: "red" }}>{loadBoardError}</p>;
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      {boardActionError && <p style={{ color: "red" }}>{boardActionError}</p>}
+
       {isEditingBoard ? (
         <form onSubmit={handleUpdateBoardName}>
-          <input value={boardName} onChange={(e) => setBoardName(e.target.value)} />
+          <input value={boardName} onChange={(e) => {
+            setBoardName(e.target.value);
+            setBoardActionError(null);
+          }} />
           <button type="submit">Save</button>
-          <button type="button" onClick={() => { setBoardName(boardName); setIsEditingBoard(false); }}>Cancel</button>
+          <button type="button" onClick={() => { setBoardName(board!.name); setIsEditingBoard(false); }}>Cancel</button>
         </form>
       ) : (
         <div>
-          <h1 style={{ display: "inline" }}>{boardName}</h1>
-          <button type="button" onClick={() => setIsEditingBoard(true)}>Edit</button>
+          <h1 style={{ display: "inline" }}>{board!.name}</h1>
+          <button type="button" onClick={() => {
+            setBoardName(board!.name);
+            setIsEditingBoard(true);
+          }}>Edit</button>
           <button type="button" onClick={handleDeleteBoard}>Delete board</button>
         </div>
       )}
+
+      {createColumnError && <p style= {{ color: "red" }}>{createColumnError}</p>}
       <form onSubmit={handleCreateColumn}>
         <input
           value={newColumnName}
-          onChange={((e) => setNewColumnName(e.target.value))}
+          onChange={(e) => {
+            setNewColumnName(e.target.value);
+            setCreateColumnError(null);
+          }}
           placeholder="New column name"
         />
         <button type="submit">Add column</button>

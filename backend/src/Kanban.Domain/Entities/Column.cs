@@ -15,6 +15,9 @@ public class Column
 
     internal static Column Create(string name, Guid boardId, int order)
     {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Column name cannot be empty.", nameof(name));
+
         return new Column
         {
             Id = Guid.NewGuid(),
@@ -26,6 +29,9 @@ public class Column
 
     internal Card AddCard(string title, string? description)
     {
+        if (string.IsNullOrWhiteSpace(title))
+            throw new ArgumentException("Card name cannot be empty.", nameof(title));
+
         var order = Cards.Count;
         var card = Card.Create(title, description, Id, order);
         _cards.Add(card);
@@ -34,6 +40,9 @@ public class Column
 
     internal void Rename(string name)
     {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Column name cannot be empty.", nameof(name));
+
         Name = name;
     }
 

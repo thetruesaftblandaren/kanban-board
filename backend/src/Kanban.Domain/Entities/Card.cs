@@ -13,6 +13,11 @@ public class Card
 
     internal static Card Create(string title, string? description, Guid columnId, int order)
     {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            throw new ArgumentException("Card title cannot be empty.", nameof(title));
+        }
+
         return new Card
         {
             Id = Guid.NewGuid(),
@@ -26,6 +31,9 @@ public class Card
 
     internal void Update(string title, string? description)
     {
+        if (string.IsNullOrWhiteSpace(title))
+            throw new ArgumentException("Card name cannot be empty.", nameof(title));
+
         Title = title;
         Description = description;
     }

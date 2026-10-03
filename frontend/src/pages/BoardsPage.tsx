@@ -7,6 +7,7 @@ export default function BoardsPage() {
   const [boards, setBoards] = useState<BoardResponse[]>([]);
   const [newBoardName, setNewBoardName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [createBoardError, setCreateBoardError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   
@@ -19,14 +20,13 @@ export default function BoardsPage() {
 
   async function handleCreateBoard(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!newBoardName.trim()) return;
 
     try {
       const board = await createBoard(newBoardName);
       setBoards((prev) => [...prev, board]);
       setNewBoardName("");
     } catch {
-      setError("Failed to create board.");
+      setCreateBoardError("Failed to create board.");
     }
   };
 
@@ -37,10 +37,14 @@ export default function BoardsPage() {
     <div>
       <h1>My Boards</h1>
 
+      {createBoardError && <p style={{ color: "red" }}>{createBoardError}</p>}
       <form onSubmit={handleCreateBoard}>
         <input
           value={newBoardName}
-          onChange={(e) => setNewBoardName(e.target.value)}
+          onChange={(e) => {
+            setNewBoardName(e.target.value)
+            setCreateBoardError(null);
+          }}
           placeholder="New board name"
         />
         <button type="submit">Create board</button>

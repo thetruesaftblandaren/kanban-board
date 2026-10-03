@@ -22,12 +22,19 @@ public class ColumnService : IColumnService
         if (!board.IsMember(userId))
             return Result<ColumnResponse>.Fail("You do not have access to this board.");
 
-        var column = board.AddColumn(request.Name);
-        await _boardRepository.SaveChangesAsync();
+        try
+        {
+            var column = board.AddColumn(request.Name);
+            await _boardRepository.SaveChangesAsync();
 
-        await _notificationService.NotifyColumnCreatedAsync(boardId, column.Id, column.Name, column.Order);
+            await _notificationService.NotifyColumnCreatedAsync(boardId, column.Id, column.Name, column.Order);
 
-        return Result<ColumnResponse>.Ok(new ColumnResponse(column.Id, column.Name, column.BoardId, column.Order));
+            return Result<ColumnResponse>.Ok(new ColumnResponse(column.Id, column.Name, column.BoardId, column.Order));
+        }
+        catch (ArgumentException ex)
+        {
+            return Result<ColumnResponse>.Fail(ex.Message);
+        }
     }
 
     public async Task<Result<ICollection<ColumnResponse>>> GetColumnsForBoardAsync(Guid userId, Guid boardId)
@@ -66,6 +73,10 @@ public class ColumnService : IColumnService
             await _notificationService.NotifyColumnRenamedAsync(boardId, column.Id, request.Name);
 
             return Result<ColumnResponse>.Ok(new ColumnResponse(column.Id, column.Name, column.BoardId, column.Order));
+        }
+        catch (ArgumentException ex)
+        {
+            return Result<ColumnResponse>.Fail(ex.Message);
         }
         catch (InvalidOperationException ex)
         {

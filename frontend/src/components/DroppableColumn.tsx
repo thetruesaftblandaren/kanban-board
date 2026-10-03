@@ -18,13 +18,14 @@ export default function DroppableColumn({
     const { setNodeRef, isOver } = useDroppable({ id: column.id });
     const [newCardTitle, setNewCardTitle] = useState("");
     const [newCardDescription, setNewCardDescription] = useState("");
+    const [createCardError, setCreateCardError] = useState<string | null>(null);
 
     const [isEditingColumn, setIsEditingColumn] = useState(false);
     const [columnName, setColumnName] = useState(column.name);
+    const [saveColumnError, setSaveColumnError] = useState<string | null>(null);
 
     async function handleCreateCard(e: React.SubmitEvent<HTMLFormElement>) {
         e.preventDefault();
-        if (!newCardTitle.trim()) return;
 
         try {
             await createCard(boardId,
@@ -34,30 +35,33 @@ export default function DroppableColumn({
             );
             setNewCardTitle("");
             setNewCardDescription("");
+            setCreateCardError(null);
         } catch {
-            console.error("Failed to create card")
+            setCreateCardError("Failed to create card. Make sure the title isn't empty.");
         }
     }
 
     function handleEditColumn() {
         setColumnName(column.name);
+        setSaveColumnError(null);
         setIsEditingColumn(true);
     }
 
     function handleCancelEditColumn() {
         setColumnName(column.name);
+        setSaveColumnError(null);
         setIsEditingColumn(false);
     }
 
     async function handleSaveColumn(e: React.SubmitEvent<HTMLFormElement>) {
         e.preventDefault();
-        if (!columnName.trim()) return;
 
         try {
             await updateColumn(boardId, column.id, columnName);
             setIsEditingColumn(false);
+            setSaveColumnError(null);
         } catch {
-            console.error("Failed to update column");
+            setSaveColumnError("Failed to update column. Make sure the name isn't empty.");
         }
     }
 
@@ -65,7 +69,7 @@ export default function DroppableColumn({
         try {
             await deleteColumn(boardId, column.id);
         } catch {
-            console.error("Failed to delete column");
+            setSaveColumnError("Failed to delete column");
         }
     }
 
@@ -79,9 +83,13 @@ export default function DroppableColumn({
                 backgroundColor: isOver ? "#f0f8ff" : "white",
             }}
         >
+            {saveColumnError && <p style={{ color: "red" }}>{saveColumnError}</p>}
             {isEditingColumn ? (
                 <form onSubmit={handleSaveColumn}>
-                    <input value={columnName} onChange={(e) => setColumnName(e.target.value)} />
+                    <input value={columnName} onChange={(e) => {
+                        setColumnName(e.target.value);
+                        setSaveColumnError(null);
+                    }} />
                     <button type="submit">Save</button>
                     <button type="button" onClick={handleCancelEditColumn}>Cancel</button>
                 </form>
@@ -103,10 +111,14 @@ export default function DroppableColumn({
                 ))}
             </ul>
 
+            {createCardError && <p style={{ color: "red" }}>{createCardError}</p>}
             <form onSubmit={handleCreateCard}>
                 <input
                     value={newCardTitle}
-                    onChange={(e) => setNewCardTitle(e.target.value)}
+                    onChange={(e) => {
+                        setNewCardTitle(e.target.value)
+                        setCreateCardError(null);
+                    }}
                     placeholder="New card title"
                 />
                 <input

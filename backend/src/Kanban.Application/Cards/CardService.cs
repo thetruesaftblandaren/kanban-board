@@ -36,6 +36,10 @@ public class CardService : ICardService
 
             return Result<CardResponse>.Ok(new CardResponse(card.Id, card.Title, card.Description, card.ColumnId, card.Order, card.CreatedAt));
         }
+        catch (ArgumentException ex)
+        {
+            return Result<CardResponse>.Fail(ex.Message);
+        }
         catch (InvalidOperationException ex)
         {
             return Result<CardResponse>.Fail(ex.Message);
@@ -60,7 +64,7 @@ public class CardService : ICardService
             .Select(c => new CardResponse(c.Id, c.Title, c.Description, c.ColumnId, c.Order, c.CreatedAt))
             .ToList();
 
-        return Result<ICollection<CardResponse>>.Ok((ICollection<CardResponse>)response);
+        return Result<ICollection<CardResponse>>.Ok(response);
     }
 
     public async Task<Result<CardResponse>> MoveCardAsync(Guid userId, Guid boardId, Guid cardId, MoveCardRequest request)
@@ -118,6 +122,10 @@ public class CardService : ICardService
             await _notificationService.NotifyCardUpdatedAsync(boardId, card.Id, card.Title, card.Description);
 
             return Result<CardResponse>.Ok(new CardResponse(card.Id, card.Title, card.Description, card.ColumnId, card.Order, card.CreatedAt));
+        }
+        catch (ArgumentException ex)
+        {
+            return Result<CardResponse>.Fail(ex.Message);
         }
         catch (InvalidOperationException ex)
         {

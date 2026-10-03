@@ -16,6 +16,7 @@ export default function DraggableCard({ card, boardId }: Props) {
     const [isEditing, setIsEditing] = useState(false);
     const [title, setTitle] = useState(card.title);
     const [description, setDescription] = useState(card.description ?? "");
+    const [cardActionError, setCardActionError] = useState<string | null>(null);
 
     const style = transform
     ? {
@@ -27,18 +28,19 @@ export default function DraggableCard({ card, boardId }: Props) {
     function handleEdit() {
         setTitle(card.title);
         setDescription(card.description ?? "");
+        setCardActionError(null);
         setIsEditing(true);
     }
 
     function handleCancel() {
         setTitle(card.title);
         setDescription(card.description ?? "");
+        setCardActionError(null);
         setIsEditing(false);
     }
 
     async function handleSave(e: React.SubmitEvent<HTMLFormElement>) {
         e.preventDefault();
-        if (!title.trim()) return;
 
         try {
             await updateCard(
@@ -49,8 +51,9 @@ export default function DraggableCard({ card, boardId }: Props) {
             description.trim() ? description : null
             );
             setIsEditing(false);
+            setCardActionError(null);
         } catch {
-            console.error("Failed to update card");
+            setCardActionError("Failed to update card. Make sure the title isn't empty.");
         }
     }
 
@@ -65,8 +68,12 @@ export default function DraggableCard({ card, boardId }: Props) {
     if (isEditing) {
         return (
             <li style={{ border: "1px solid #ddd", padding: "0.5rem", marginBottom: "0.5rem" }}>
+                {cardActionError && <p style={{ color: "red" }}>{cardActionError}</p>}
                 <form onSubmit={handleSave}>
-                    <input value={title} onChange={(e) => setTitle(e.target.value)} />
+                    <input value={title} onChange={(e) => {
+                        setTitle(e.target.value);
+                        setCardActionError(null);
+                    }} />
                     <input value={description} onChange={(e) => setDescription(e.target.value)} />
                     <button type="submit">Save</button>
                     <button type="button" onClick={handleCancel}>Cancel</button>
@@ -91,6 +98,7 @@ export default function DraggableCard({ card, boardId }: Props) {
         >
             <strong>{card.title}</strong>
             {card.description && <p>{card.description}</p>}
+            {cardActionError && <p style={{ color: "red" }}>{cardActionError}</p>}
             <button
                 type="button"
                 onPointerDown={(e) => e.stopPropagation()}
