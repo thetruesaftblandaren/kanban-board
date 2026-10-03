@@ -28,6 +28,7 @@ Built as a portfolio project to demonstrate fullstack development skills as a ju
 - React frontend: login, board list, board detail view, and create/edit/delete forms for boards, columns, and cards
 - Drag-and-drop card movement (dnd-kit) with optimistic UI updates and automatic rollback on failure
 - Real-time updates via SignalR: card creation, updates, deletion, and moves are all broadcast live to everyone viewing the same board. SignalR is the single source of truth for card state changes in the frontend, avoiding duplicate-update bugs from having two independent update paths
+- Error handling
 
 ### Stretch goals
 
