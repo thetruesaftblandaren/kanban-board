@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import type { CardResponse } from "../types/api";
 import { updateCard, deleteCard } from "../api/boards";
+import ErrorMessage from "./ErrorMessage";
 
 interface Props {
     card: CardResponse;
@@ -68,7 +69,7 @@ export default function DraggableCard({ card, boardId }: Props) {
     if (isEditing) {
         return (
             <li style={{ border: "1px solid #ddd", padding: "0.5rem", marginBottom: "0.5rem" }}>
-                {cardActionError && <p style={{ color: "red" }}>{cardActionError}</p>}
+                <ErrorMessage message={cardActionError} />
                 <form onSubmit={handleSave}>
                     <input value={title} onChange={(e) => {
                         setTitle(e.target.value);
@@ -98,7 +99,7 @@ export default function DraggableCard({ card, boardId }: Props) {
         >
             <strong>{card.title}</strong>
             {card.description && <p>{card.description}</p>}
-            {cardActionError && <p style={{ color: "red" }}>{cardActionError}</p>}
+            <ErrorMessage message={cardActionError} />
             <button
                 type="button"
                 onPointerDown={(e) => e.stopPropagation()}

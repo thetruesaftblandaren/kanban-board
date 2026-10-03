@@ -3,6 +3,7 @@ import { useDroppable } from "@dnd-kit/core";
 import type { ColumnResponse, CardResponse } from "../types/api";
 import { createCard, updateColumn, deleteColumn } from "../api/boards";
 import DraggableCard from "./DraggableCard";
+import ErrorMessage from "./ErrorMessage";
 
 interface Props {
     column: ColumnResponse;
@@ -83,7 +84,7 @@ export default function DroppableColumn({
                 backgroundColor: isOver ? "#f0f8ff" : "white",
             }}
         >
-            {saveColumnError && <p style={{ color: "red" }}>{saveColumnError}</p>}
+            <ErrorMessage message={saveColumnError} />
             {isEditingColumn ? (
                 <form onSubmit={handleSaveColumn}>
                     <input value={columnName} onChange={(e) => {
@@ -111,7 +112,7 @@ export default function DroppableColumn({
                 ))}
             </ul>
 
-            {createCardError && <p style={{ color: "red" }}>{createCardError}</p>}
+            <ErrorMessage message={createCardError} />
             <form onSubmit={handleCreateCard}>
                 <input
                     value={newCardTitle}

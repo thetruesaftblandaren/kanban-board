@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createBoard, getBoards } from "../api/boards";
 import type { BoardResponse } from "../types/api";
+import ErrorMessage from "../components/ErrorMessage";
 
 export default function BoardsPage() {
   const [boards, setBoards] = useState<BoardResponse[]>([]);
@@ -31,13 +32,13 @@ export default function BoardsPage() {
   };
 
   if (loading) return <p>Loading...</p>;
-  if (error) return <p style={{ color: "red" }}>{error}</p>
+  if (error) return <ErrorMessage message={error} />
 
   return (
     <div>
       <h1>My Boards</h1>
 
-      {createBoardError && <p style={{ color: "red" }}>{createBoardError}</p>}
+      <ErrorMessage message={createBoardError} />
       <form onSubmit={handleCreateBoard}>
         <input
           value={newBoardName}
@@ -50,7 +51,7 @@ export default function BoardsPage() {
         <button type="submit">Create board</button>
       </form>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      <ErrorMessage message={error} />
       {boards.length === 0 && <p>No boards yet.</p>}
 
       <ul>

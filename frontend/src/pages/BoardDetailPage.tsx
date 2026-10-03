@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   DndContext,
   type DragEndEvent,
@@ -11,6 +11,7 @@ import { getColumns, getCards, moveCard, createColumn, getBoardById, updateBoard
 import { getConnection } from "../api/signalr";
 import type { ColumnResponse, CardResponse, BoardResponse } from "../types/api";
 import DroppableColumn from "../components/DroppableColumn";
+import ErrorMessage from "../components/ErrorMessage";
 
 interface BoardRenamedPayload {
   boardId: string;
@@ -288,7 +289,7 @@ export default function BoardDetailPage() {
   }
 
   if (loading) return <p>Loading...</p>;
-  if (loadBoardError) return <p style={{ color: "red" }}>{loadBoardError}</p>;
+  if (loadBoardError) return <ErrorMessage message={loadBoardError} />;
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
@@ -300,7 +301,7 @@ export default function BoardDetailPage() {
         <button onClick={() => navigate("/boards")}>Back</button>
       </nav>
       
-      {boardActionError && <p style={{ color: "red" }}>{boardActionError}</p>}
+      <ErrorMessage message={boardActionError} />
 
       {isEditingBoard ? (
         <form onSubmit={handleUpdateBoardName}>
@@ -309,7 +310,13 @@ export default function BoardDetailPage() {
             setBoardActionError(null);
           }} />
           <button type="submit">Save</button>
-          <button type="button" onClick={() => { setBoardName(board!.name); setIsEditingBoard(false); }}>Cancel</button>
+          <button type="button" onClick={() => {
+            setBoardName(board!.name);
+            setBoardActionError(null);
+            setIsEditingBoard(false);
+          }} >
+            Cancel
+          </button>
         </form>
       ) : (
         <div>
@@ -322,7 +329,7 @@ export default function BoardDetailPage() {
         </div>
       )}
 
-      {createColumnError && <p style= {{ color: "red" }}>{createColumnError}</p>}
+      <ErrorMessage message={createColumnError} />
       <form onSubmit={handleCreateColumn}>
         <input
           value={newColumnName}
