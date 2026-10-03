@@ -69,8 +69,6 @@ export default function BoardDetailPage() {
   const [newColumnName, setNewColumnName] = useState("");
   const [columns, setColumns] = useState<ColumnResponse[]>([]);
   const [createColumnError, setCreateColumnError] = useState<string | null>(null);
-  const [updateColumnError, setUpdateColumnError] = useState<string | null>(null);
-  const [deleteColumnError, setDeleteColumnError] = useState<string | null>(null);
 
   const [cards, setCards] = useState<CardResponse[]>([]);
 
