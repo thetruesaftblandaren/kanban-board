@@ -1,5 +1,4 @@
 using Kanban.Application.Common;
-using Kanban.Domain.Entities;
 
 namespace Kanban.Application.Cards;
 
@@ -82,6 +81,8 @@ public class CardService : ICardService
 
         try
         {
+            var sourceColumnId = board.Columns.First(c => c.Cards.Any(card => card.Id == cardId)).Id;
+
             board.MoveCard(cardId, request.TargetColumnId, request.NewOrder);
             await _boardRepository.SaveChangesAsync();
 
@@ -89,8 +90,16 @@ public class CardService : ICardService
                 .SelectMany(c => c.Cards)
                 .First(c => c.Id == cardId);
 
-            await _notificationService.NotifyCardMovedAsync(boardId, movedCard.Id, movedCard.ColumnId, movedCard.Order);
-
+            var affectedColumnIds = new HashSet<Guid> { sourceColumnId, request.TargetColumnId };
+            foreach (var columnId in affectedColumnIds)
+            {
+                var column = board.Columns.First(c => c.Id == columnId);
+                foreach (var card in column.Cards)
+                {
+                    await _notificationService.NotifyCardMovedAsync(boardId, card.Id, card.ColumnId, card.Order);
+                }
+            }
+            
             return Result<CardResponse>.Ok(new CardResponse(movedCard.Id, movedCard.Title, movedCard.Description, movedCard.ColumnId, movedCard.Order, movedCard.CreatedAt));
         }
         catch (InvalidOperationException ex)

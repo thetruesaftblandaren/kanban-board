@@ -137,15 +137,15 @@ To be added
 - [x] Data model + PostgreSQL database + migrations
 - [x] User registration and login (JWT)
 - [x] Board refactored into an Aggregate Root (Column/Card only mutable via Board)
-- [x] Board / Column create and read, scoped to authenticated user
+- [x] Board create and read, scoped to authenticated user
+- [x] Column create, read, update, and delete
 - [x] Card create, read, update, and delete
 - [x] Move a card between columns (or reorder within a column)
 - [x] React frontend: login, board/column/card creation and editing, board detail view with drag-and-drop
 - [x] SignalR real-time updates for all card operations (create, update, delete, move), single source of truth for card state
-- [x] Drag-and-drop for cards (dnd-kit), with optimistic updates and automatic rollback on failure
 - [x] Error handling
 - [ ] Board member invitations (add non-owner members)
-- [ ] Column / Board update & delete
+- [ ] Board update & delete
 - [ ] Stretch goals (see above)
 
 This section is kept up to date as the project progresses, rather than implying the project is further along than it is.

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useDraggable } from "@dnd-kit/core";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type { CardResponse } from "../types/api";
 import { updateCard, deleteCard } from "../api/boards";
 import ErrorMessage from "./ErrorMessage";
@@ -10,7 +11,7 @@ interface Props {
 }
 
 export default function DraggableCard({ card, boardId }: Props) {
-    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: card.id,
     });
 
@@ -19,12 +20,11 @@ export default function DraggableCard({ card, boardId }: Props) {
     const [description, setDescription] = useState(card.description ?? "");
     const [cardActionError, setCardActionError] = useState<string | null>(null);
 
-    const style = transform
-    ? {
-        transform: `translate(${transform.x}px, ${transform.y}px)`,
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
         opacity: isDragging ? 0.5 : 1,
-      }
-    : undefined;
+    };
 
     function handleEdit() {
         setTitle(card.title);

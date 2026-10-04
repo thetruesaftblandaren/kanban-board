@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import type { ColumnResponse, CardResponse } from "../types/api";
 import { createCard, updateColumn, deleteColumn } from "../api/boards";
 import DraggableCard from "./DraggableCard";
@@ -102,15 +103,18 @@ export default function DroppableColumn({
                 </div>
             )}
 
-            <ul style={{ listStyle: "none", padding: 0 }}>
-                {cards.map((card) => (
-                    <DraggableCard
-                        key={card.id}
-                        card={card}
-                        boardId={boardId}
-                    />
-                ))}
-            </ul>
+            <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+                <ul style={{ listStyle: "none", padding: 0 }}>
+                    {cards.map((card) => (
+                        <DraggableCard
+                            key={card.id}
+                            card={card}
+                            boardId={boardId}
+                        />
+                    ))}
+                </ul>
+            </SortableContext>
+            
 
             <ErrorMessage message={createCardError} />
             <form onSubmit={handleCreateCard}>

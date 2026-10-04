@@ -50,17 +50,34 @@ public class Column
     {
         var card = _cards.FirstOrDefault(c => c.Id == cardId)
             ?? throw new InvalidOperationException("Card not found in this column.");
-        
+
         _cards.Remove(card);
-        Reorder();
+        ReorderBasedOnCurrentOrder();
         return card;
     }
 
     internal void InsertCard(Card card, int order)
     {
         card.AssignToColumn(Id);
-        _cards.Insert(Math.Clamp(order, 0, _cards.Count), card);
+
+        var sorted = _cards.OrderBy(c => c.Order).ToList();
+        sorted.Insert(Math.Clamp(order, 0, sorted.Count), card);
+
+        _cards.Clear();
+        _cards.AddRange(sorted);
+
         Reorder();
+    }
+
+    private void ReorderBasedOnCurrentOrder()
+    {
+        var sorted = _cards.OrderBy(c => c.Order).ToList();
+        for (int i = 0; i < sorted.Count; i++)
+        {
+            sorted[i].SetOrder(i);
+        }
+        _cards.Clear();
+        _cards.AddRange(sorted);
     }
 
     private void Reorder()

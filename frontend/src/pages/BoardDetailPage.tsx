@@ -7,6 +7,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
+import { arrayMove } from "@dnd-kit/sortable";
 import { getColumns, getCards, moveCard, createColumn, getBoardById, updateBoard, deleteBoard } from "../api/boards";
 import { getConnection } from "../api/signalr";
 import type { ColumnResponse, CardResponse, BoardResponse } from "../types/api";
@@ -75,6 +76,8 @@ export default function BoardDetailPage() {
 
   const [loadBoardError, setLoadBoardError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  const [dragError, setDragError] = useState<string | null>(null);
 
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -264,27 +267,52 @@ export default function BoardDetailPage() {
     if (!over || !boardId) return;
 
     const cardId = active.id as string;
-    const targetColumnId = over.id as string;
+    const overId = over.id as string;
+
+    if (cardId === overId) return;
 
     const card = cards.find((c) => c.id === cardId);
-    if (!card || card.columnId === targetColumnId) return;
+    if (!card) return;
 
-    const cardsInTargetColumn = cards.filter((c) => c.columnId === targetColumnId);
-    const newOrder = cardsInTargetColumn.length;
+    const overCard = cards.find((c) => c.id === overId);
+    const targetColumnId = overCard ? overCard.columnId : overId;
 
-    const previousCards = cards;
+    let newOrder: number;
 
-    setCards((prevCards) =>
-      prevCards.map((c) =>
-        c.id === cardId ? { ...c, columnId: targetColumnId, order: newOrder } : c
-      )
-    );
+if (card.columnId === targetColumnId) {
+  const sourceColumnCards = cards
+    .filter((c) => c.columnId === card.columnId)
+    .sort((a, b) => a.order - b.order);
+
+  const oldIndex = sourceColumnCards.findIndex((c) => c.id === cardId);
+  const newIndex = overCard
+    ? sourceColumnCards.findIndex((c) => c.id === overCard.id)
+    : sourceColumnCards.length - 1;
+
+  const reordered = arrayMove(sourceColumnCards, oldIndex, newIndex);
+  newOrder = reordered.findIndex((c) => c.id === cardId);
+
+  console.log("Reorder within column:", {
+    cardTitle: card.title,
+    before: sourceColumnCards.map((c) => c.title),
+    oldIndex,
+    overCardTitle: overCard?.title,
+    newIndex,
+    after: reordered.map((c) => c.title),
+    finalNewOrder: newOrder,
+  });
+} else {
+  const targetColumnCards = cards
+    .filter((c) => c.columnId === targetColumnId)
+    .sort((a, b) => a.order - b.order);
+
+  newOrder = targetColumnCards.length;
+}
 
     try {
       await moveCard(boardId, cardId, targetColumnId, newOrder);
     } catch {
-      setCards(previousCards);
-      console.error("Failed to move card. Please try again.");
+      setDragError("Failed to move card. Please try again.");
     }
   }
 
@@ -301,6 +329,7 @@ export default function BoardDetailPage() {
         <button onClick={() => navigate("/boards")}>Back</button>
       </nav>
       
+      <ErrorMessage message={dragError} />
       <ErrorMessage message={boardActionError} />
 
       {isEditingBoard ? (
