@@ -25,6 +25,7 @@ Built as a portfolio project to demonstrate fullstack development skills as a ju
 - Full Board/Column/Card create and read, scoped to the authenticated user (`BoardMember` membership required)
 - Card update and delete
 - Move a card between columns (or reorder within a column), with consistent ordering enforced by the `Board` aggregate
+- Drag and drop a column to change order
 - React frontend: login, board list, board detail view, and create/edit/delete forms for boards, columns, and cards
 - Drag-and-drop card movement (dnd-kit) with optimistic UI updates and automatic rollback on failure
 - Real-time updates via SignalR: card creation, updates, deletion, and moves are all broadcast live to everyone viewing the same board. SignalR is the single source of truth for card state changes in the frontend, avoiding duplicate-update bugs from having two independent update paths
@@ -141,9 +142,12 @@ To be added
 - [x] Column create, read, update, and delete
 - [x] Card create, read, update, and delete
 - [x] Move a card between columns (or reorder within a column)
+- [x] Change column order by dragging and dropping
 - [x] React frontend: login, board/column/card creation and editing, board detail view with drag-and-drop
 - [x] SignalR real-time updates for all card operations (create, update, delete, move), single source of truth for card state
 - [x] Error handling
+- [ ] Create new users
+- [ ] Logout
 - [ ] Board member invitations (add non-owner members)
 - [ ] Board update & delete
 - [ ] Stretch goals (see above)
