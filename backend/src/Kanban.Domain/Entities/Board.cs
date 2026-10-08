@@ -78,6 +78,26 @@ public class Board
         _columns.Remove(column);
     }
 
+    public void MoveColumn(Guid columnId, int newOrder)
+    {
+        var column = _columns.FirstOrDefault(c => c.Id == columnId)
+            ?? throw new InvalidOperationException("Column not found on this board.");
+
+        var sorted = _columns.OrderBy(c => c.Order).ToList();
+        sorted.Remove(column);
+
+        var clampedOrder = Math.Clamp(newOrder, 0, sorted.Count);
+        sorted.Insert(clampedOrder, column);
+
+        for (int i = 0; i < sorted.Count; i++)
+        {
+            sorted[i].Order = i;
+        }
+
+        _columns.Clear();
+        _columns.AddRange(sorted);
+    }
+
     public Card AddCard(Guid columnId, string title, string? description)
     {
         var column = _columns.FirstOrDefault(c => c.Id == columnId)

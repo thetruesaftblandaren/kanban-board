@@ -53,6 +53,15 @@ public class ColumnsController : ControllerBase
         return result.Success ? Ok(result.Value) : NotFound(result.Errors);
     }
 
+    [HttpPatch("{columnId}/move")]
+    public async Task<IActionResult> Move(Guid boardId, Guid columnId, MoveColumnRequest request)
+    {
+        var userId = GetUserId();
+        var result = await _columnService.MoveColumnAsync(userId, boardId, columnId, request);
+
+        return result.Success ? Ok(result.Value) : NotFound(result.Errors);
+    }
+
     private Guid GetUserId()
     {
         var sub =  User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");

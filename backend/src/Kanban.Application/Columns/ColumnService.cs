@@ -54,6 +54,38 @@ public class ColumnService : IColumnService
         return Result<ICollection<ColumnResponse>>.Ok((ICollection<ColumnResponse>)response);
     }
 
+    public async Task<Result<ColumnResponse>> MoveColumnAsync(Guid userId, Guid boardId, Guid columnId, MoveColumnRequest request)
+    {
+        var board = await _boardRepository.GetByIdWithDetailsAsync(boardId);
+        if (board is null)
+        {
+            return Result<ColumnResponse>.Fail("Board not found.");
+        }
+
+        if (!board.IsMember(userId))
+        {
+            return Result<ColumnResponse>.Fail("You do not have access to this board.");
+        }
+
+        try
+        {
+            board.MoveColumn(columnId, request.NewOrder);
+            await _boardRepository.SaveChangesAsync();
+
+            foreach (var column in board.Columns)
+            {
+                await _notificationService.NotifyColumnMovedAsync(boardId, column.Id, column.Order);
+            }
+
+            var moved = board.Columns.First((c) => c.Id == columnId);
+            return Result<ColumnResponse>.Ok(new ColumnResponse(moved.Id, moved.Name, moved.BoardId, moved.Order));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Result<ColumnResponse>.Fail(ex.Message);
+        }
+    }
+
     public async Task<Result<ColumnResponse>> RenameColumnAsync(Guid userId, Guid boardId, Guid columnId, UpdateColumnRequest request)
     {
         var board = await _boardRepository.GetByIdWithDetailsAsync(boardId);

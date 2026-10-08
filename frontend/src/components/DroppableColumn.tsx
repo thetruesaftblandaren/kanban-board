@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { useDroppable } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { useSortable, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type { ColumnResponse, CardResponse } from "../types/api";
 import { createCard, updateColumn, deleteColumn } from "../api/boards";
 import DraggableCard from "./DraggableCard";
@@ -17,7 +17,7 @@ export default function DroppableColumn({
     cards,
     boardId,
 }: Props) {
-    const { setNodeRef, isOver } = useDroppable({ id: column.id });
+    const { attributes, listeners, setNodeRef, transform, transition, isOver, isDragging } = useSortable({ id: column.id });
     const [newCardTitle, setNewCardTitle] = useState("");
     const [newCardDescription, setNewCardDescription] = useState("");
     const [createCardError, setCreateCardError] = useState<string | null>(null);
@@ -83,6 +83,9 @@ export default function DroppableColumn({
                 padding: "1rem",
                 minWidth: "200px",
                 backgroundColor: isOver ? "#f0f8ff" : "white",
+                transform: CSS.Transform.toString(transform),
+                transition,
+                opacity: isDragging ? 0.5 : 1,
             }}
         >
             <ErrorMessage message={saveColumnError} />
@@ -97,6 +100,13 @@ export default function DroppableColumn({
                 </form>
             ) : (
                 <div>
+                    <span
+                        {...attributes}
+                        {...listeners}
+                        style={{cursor: "grab", marginRight: "0.5rem" }}
+                    >
+                        ⠿
+                    </span>
                     <h2 style={{ display: "inline" }}>{column.name}</h2>
                     <button type="button" onClick={handleEditColumn}>Edit</button>
                     <button type="button" onClick={handleDeleteColumn}>Delete</button>

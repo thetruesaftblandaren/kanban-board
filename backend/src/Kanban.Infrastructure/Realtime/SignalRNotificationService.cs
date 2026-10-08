@@ -38,6 +38,13 @@ public class SignalRNotificationService : INotificationService
 
     /* Columns */
 
+    public async Task NotifyColumnMovedAsync(Guid boardId, Guid columnId, int newOrder)
+    {
+        await _hubContext.Clients
+            .Group(BoardHub.GroupName(boardId.ToString()))
+            .SendAsync("ColumnMoved", new { columnId, newOrder });
+    }
+
     public async Task NotifyColumnCreatedAsync(Guid boardId, Guid columnId, string name, int order)
     {
         await _hubContext.Clients

@@ -50,6 +50,11 @@ export async function deleteColumn(boardId: string, columnId: string): Promise<v
     return response.data;
 }
 
+export async function moveColumn(boardId: string, columnId: string, newOrder: number): Promise<ColumnResponse> {
+    const response = await client.patch<ColumnResponse>(`boards/${boardId}/columns/${columnId}/move`, { newOrder });
+    return response.data;
+}
+
 /* Cards */
 
 export async function getCards(boardId: string, columnId: string): Promise<CardResponse[]> {

@@ -7,8 +7,8 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { arrayMove } from "@dnd-kit/sortable";
-import { getColumns, getCards, moveCard, createColumn, getBoardById, updateBoard, deleteBoard } from "../api/boards";
+import { SortableContext, arrayMove, horizontalListSortingStrategy } from "@dnd-kit/sortable";
+import { getColumns, getCards, moveCard, createColumn, moveColumn, getBoardById, updateBoard, deleteBoard } from "../api/boards";
 import { getConnection } from "../api/signalr";
 import type { ColumnResponse, CardResponse, BoardResponse } from "../types/api";
 import DroppableColumn from "../components/DroppableColumn";
@@ -17,6 +17,11 @@ import ErrorMessage from "../components/ErrorMessage";
 interface BoardRenamedPayload {
   boardId: string;
   name: string;
+}
+
+interface ColumnMovedPayload {
+  columnId: string;
+  newOrder: number;
 }
 
 interface ColumnCreatedPayload {
@@ -178,6 +183,14 @@ export default function BoardDetailPage() {
       );
     }
 
+    function handleColumnMoved(payload: ColumnMovedPayload) {
+      setColumns((prevColumns) =>
+        prevColumns.map((c) =>
+          c.id === payload.columnId ? { ...c, order: payload.newOrder } : c
+        )
+      );
+    }
+
     function handleColumnDeleted(payload: ColumnDeletedPayload) {
       setColumns((prevColumns) =>
         prevColumns.filter((c) => c.id !== payload.columnId))
@@ -227,6 +240,7 @@ export default function BoardDetailPage() {
 
     connection.on("BoardRenamed", handleBoardRenamed);
     connection.on("BoardDeleted", handleBoardDeleted);
+    connection.on("ColumnMoved", handleColumnMoved);
     connection.on("ColumnCreated", handleColumnCreated);
     connection.on("ColumnRenamed", handleColumnRenamed);
     connection.on("ColumnDeleted", handleColumnDeleted);
@@ -249,6 +263,7 @@ export default function BoardDetailPage() {
     return () => {
       connection.off("BoardRenamed", handleBoardRenamed);
       connection.off("BoardDeleted", handleBoardDeleted);
+      connection.off("ColumnMoved", handleColumnMoved);
       connection.off("ColumnCreated", handleColumnCreated);
       connection.off("ColumnRenamed", handleColumnRenamed);
       connection.off("ColumnDeleted", handleColumnDeleted);
@@ -266,51 +281,53 @@ export default function BoardDetailPage() {
     const { active, over } = event;
     if (!over || !boardId) return;
 
-    const cardId = active.id as string;
+    const activeId = active.id as string;
     const overId = over.id as string;
+    if (activeId === overId) return;
 
-    if (cardId === overId) return;
+    if (columns.some((c) => c.id === activeId)) {
+      const sortedColumns = [...columns].sort((a, b) => a.order - b.order);
 
-    const card = cards.find((c) => c.id === cardId);
+      const overColumnId = columns.some((c) => c.id === overId)
+        ? overId
+        : cards.find((c) => c.id === overId)?.columnId;
+
+      if (!overColumnId || overColumnId === activeId) return;
+
+      const newOrder = sortedColumns.findIndex((c) => c.id === overColumnId);
+
+      try {
+        await moveColumn(boardId, activeId, newOrder);
+      } catch {
+        setDragError("Failed to move column. Please try again.");
+      }
+      return;
+    }
+
+    const card = cards.find((c) => c.id === activeId);
     if (!card) return;
 
     const overCard = cards.find((c) => c.id === overId);
     const targetColumnId = overCard ? overCard.columnId : overId;
 
+    const targetColumnCards = cards
+      .filter((c) => c.columnId === targetColumnId)
+      .sort((a, b) => a.order - b.order);
+
     let newOrder: number;
 
-if (card.columnId === targetColumnId) {
-  const sourceColumnCards = cards
-    .filter((c) => c.columnId === card.columnId)
-    .sort((a, b) => a.order - b.order);
-
-  const oldIndex = sourceColumnCards.findIndex((c) => c.id === cardId);
-  const newIndex = overCard
-    ? sourceColumnCards.findIndex((c) => c.id === overCard.id)
-    : sourceColumnCards.length - 1;
-
-  const reordered = arrayMove(sourceColumnCards, oldIndex, newIndex);
-  newOrder = reordered.findIndex((c) => c.id === cardId);
-
-  console.log("Reorder within column:", {
-    cardTitle: card.title,
-    before: sourceColumnCards.map((c) => c.title),
-    oldIndex,
-    overCardTitle: overCard?.title,
-    newIndex,
-    after: reordered.map((c) => c.title),
-    finalNewOrder: newOrder,
-  });
-} else {
-  const targetColumnCards = cards
-    .filter((c) => c.columnId === targetColumnId)
-    .sort((a, b) => a.order - b.order);
-
-  newOrder = targetColumnCards.length;
-}
+    if (card.columnId === targetColumnId) {
+      newOrder = overCard
+        ? targetColumnCards.findIndex((c) => c.id === overCard.id)
+        : targetColumnCards.length - 1;
+    } else {
+      newOrder = overCard
+        ? targetColumnCards.findIndex((c) => c.id === overCard.id)
+        : targetColumnCards.length;
+    }
 
     try {
-      await moveCard(boardId, cardId, targetColumnId, newOrder);
+      await moveCard(boardId, activeId, targetColumnId, newOrder);
     } catch {
       setDragError("Failed to move card. Please try again.");
     }
@@ -371,18 +388,26 @@ if (card.columnId === targetColumnId) {
         <button type="submit">Add column</button>
       </form>
 
-      <div style={{ display: "flex", gap: "1rem" }}>
-        {columns
-          .sort((a, b) => a.order - b.order)
-          .map((column) => (
-            <DroppableColumn
-              key={column.id}
-              column={column}
-              cards={cards.filter((c) => c.columnId === column.id).sort((a, b) => a.order - b.order)}
-              boardId={boardId!}
-            />
-          ))}
-      </div>
+      <SortableContext
+        items={[...columns].sort((a, b) => a.order - b.order).map((c) => c.id)}
+        strategy={horizontalListSortingStrategy}
+      >
+        <div style={{ display: "flex", gap: "1rem" }}>
+          {[...columns]
+            .sort((a, b) => a.order - b.order)
+            .map((column) => (
+              <DroppableColumn
+                key={column.id}
+                column={column}
+                cards={cards
+                  .filter((c) => c.columnId === column.id)
+                  .sort((a, b) => a.order - b.order)}
+                boardId={boardId!}
+              />
+            ))}
+        </div>
+      </SortableContext>
+      
     </DndContext>
   );
 }

@@ -10,6 +10,7 @@ public interface INotificationService
 
     /* Columns */
     
+    Task NotifyColumnMovedAsync(Guid boardId, Guid columnId, int newOrder);
     Task NotifyColumnCreatedAsync(Guid boardId, Guid columnId, string name, int order);
     Task NotifyColumnRenamedAsync(Guid boardId, Guid columnId, string name);
     Task NotifyColumnDeletedAsync(Guid boardId, Guid columnId);
