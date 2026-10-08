@@ -7,7 +7,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { SortableContext, arrayMove, horizontalListSortingStrategy } from "@dnd-kit/sortable";
+import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import { getColumns, getCards, moveCard, createColumn, moveColumn, getBoardById, updateBoard, deleteBoard } from "../api/boards";
 import { getConnection } from "../api/signalr";
 import type { ColumnResponse, CardResponse, BoardResponse } from "../types/api";
