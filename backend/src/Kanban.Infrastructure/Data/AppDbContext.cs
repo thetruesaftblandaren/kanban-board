@@ -11,6 +11,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) {}
 
     public DbSet<User> DomainUsers => Set<User>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Board> Boards => Set<Board>();
     public DbSet<Column> Columns => Set<Column>();
     public DbSet<Card> Cards => Set<Card>();
@@ -19,6 +20,9 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        builder.Entity<RefreshToken>().Property(t => t.Id).ValueGeneratedNever();
+        builder.Entity<RefreshToken>().HasIndex(t => t.TokenHash).IsUnique();
 
         builder.Entity<Board>().Property(b => b.Id).ValueGeneratedNever();
         builder.Entity<Column>().Property(c => c.Id).ValueGeneratedNever();

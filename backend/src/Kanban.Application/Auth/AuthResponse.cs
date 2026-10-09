@@ -1,3 +1,3 @@
 namespace Kanban.Application.Auth;
 
-public record AuthResponse(string Token, Guid UserId, string DisplayName);
+public record AuthResponse(string Token, string RefreshToken, Guid UserId, string DisplayName);

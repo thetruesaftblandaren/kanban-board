@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { login } from "../api/auth";
+import ErrorMessage from "../components/ErrorMessage";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -46,9 +47,11 @@ export default function LoginPage() {
                 />
             </div>
 
-            {error && <p style={{ color : "red" }}>{error}</p>}
+            <ErrorMessage message={error} />
 
             <button type="submit">Log in</button>
+
+            <p>Don't have an account? <Link to="/register">Register</Link></p>
         </form>
     );
 }

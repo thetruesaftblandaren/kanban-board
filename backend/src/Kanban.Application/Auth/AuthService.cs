@@ -16,8 +16,10 @@ public class AuthService : IAuthService
 
     public async Task<Result<AuthResponse>> RegisterAsync(RegisterRequest request)
     {
-        var createResult = await _identityService.CreateUserAsync(request.Email, request.Password);
+        if (string.IsNullOrWhiteSpace(request.DisplayName))
+            return Result<AuthResponse>.Fail("Display name cannot be empty.");
 
+        var createResult = await _identityService.CreateUserAsync(request.Email, request.Password);
         if (!createResult.Success)
             return Result<AuthResponse>.Fail(createResult.Errors);
 
@@ -28,7 +30,9 @@ public class AuthService : IAuthService
         await _userRepository.SaveChangesAsync();
 
         var token = await _identityService.CreateTokenAsync(userId, request.Email);
-        return Result<AuthResponse>.Ok(new AuthResponse(token, userId, domainUser.DisplayName));
+        var refreshToken = await _identityService.CreateRefreshTokenAsync(userId);
+
+        return Result<AuthResponse>.Ok(new AuthResponse(token, refreshToken, userId, domainUser.DisplayName));
     }
 
     public async Task<Result<AuthResponse>> LoginAsync(LoginRequest request)
@@ -39,7 +43,26 @@ public class AuthService : IAuthService
 
         var domainUser = await _userRepository.GetByIdAsync(userId.Value);
         var token = await _identityService.CreateTokenAsync(userId.Value, request.Email);
+        var refreshToken = await _identityService.CreateRefreshTokenAsync(userId.Value);
 
-        return Result<AuthResponse>.Ok(new AuthResponse(token, userId.Value, domainUser?.DisplayName ?? ""));
+        return Result<AuthResponse>.Ok(new AuthResponse(token, refreshToken, userId.Value, domainUser?.DisplayName ?? ""));
+    }
+
+    public async Task<Result<AuthResponse>> RefreshAsync(RefreshRequest request)
+    {
+        var rotated = await _identityService.RotateRefreshTokenAsync(request.RefreshToken);
+        if (!rotated.Success)
+            return Result<AuthResponse>.Fail(rotated.Errors);
+        
+        var data = rotated.Value!;
+        var domainUser = await _userRepository.GetByIdAsync(data.UserId);
+        var token = await _identityService.CreateTokenAsync(data.UserId, data.Email);
+
+        return Result<AuthResponse>.Ok(new AuthResponse(token, data.NewRefreshToken, data.UserId, domainUser?.DisplayName ?? ""));
+    }
+    
+    public async Task LogoutAsync(RefreshRequest request)
+    {
+        await _identityService.RevokeRefreshTokenAsync(request.RefreshToken);
     }
 }

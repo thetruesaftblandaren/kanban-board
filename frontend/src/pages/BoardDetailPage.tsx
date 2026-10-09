@@ -338,14 +338,6 @@ export default function BoardDetailPage() {
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-      <nav style={{
-        display: "inline-block",
-        marginBottom: "1rem",
-        position: "relative",
-      }}>
-        <button onClick={() => navigate("/boards")}>Back</button>
-      </nav>
-      
       <ErrorMessage message={dragError} />
       <ErrorMessage message={boardActionError} />
 
