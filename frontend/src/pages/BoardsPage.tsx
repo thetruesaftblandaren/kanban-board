@@ -2,20 +2,20 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createBoard, getBoards } from "../api/boards";
 import type { BoardResponse } from "../types/api";
+import BoardListItem from "../components/BoardListItem";
 import ErrorMessage from "../components/ErrorMessage";
 
 export default function BoardsPage() {
   const [boards, setBoards] = useState<BoardResponse[]>([]);
   const [newBoardName, setNewBoardName] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [createBoardError, setCreateBoardError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
   
   useEffect(() => {
     getBoards()
       .then(setBoards)
-      .catch(() => setError("Failed to load boards."))
+      .catch(() => setLoadError("Failed to load boards."))
       .finally(() => setLoading(false));
   }, []);
 
@@ -26,13 +26,14 @@ export default function BoardsPage() {
       const board = await createBoard(newBoardName);
       setBoards((prev) => [...prev, board]);
       setNewBoardName("");
+      setCreateBoardError(null);
     } catch {
       setCreateBoardError("Failed to create board.");
     }
   };
 
   if (loading) return <p>Loading...</p>;
-  if (error) return <ErrorMessage message={error} />
+  if (loadError) return <ErrorMessage message={loadError} />
 
   return (
     <div>
@@ -51,17 +52,22 @@ export default function BoardsPage() {
         <button type="submit">Create board</button>
       </form>
 
-      <ErrorMessage message={error} />
+      <ErrorMessage message={loadError} />
       {boards.length === 0 && <p>No boards yet.</p>}
 
       <ul>
         {boards.map((board) => (
-          <li key={board.id}>
-            <button onClick={() => navigate(`/boards/${board.id}`)}>
-              {board.name}
-            </button>
-          </li>
-        ))}
+          <BoardListItem
+            key={board.id}
+            board={board}
+            onUpdated={(updated) =>
+              setBoards((prev) => prev.map((b) => (b.id === updated.id ? updated: b)))
+            }
+            onDeleted={(boardId) =>
+              setBoards((prev) => prev.filter((b) => b.id !== boardId))
+            }
+          />
+          ))}
       </ul>
     </div>
   );
