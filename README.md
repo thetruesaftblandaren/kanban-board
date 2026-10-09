@@ -2,7 +2,7 @@
 
 A Kanban board with real-time collaboration. When a user moves, creates, or edits a card, every other user viewing the same board will see the update instantly via SignalR, with no page refresh required.
 
-> **Project status: in progress.** Backend (Board → Column → Card CRUD with authorization, JWT auth), real-time updates via SignalR, and a React frontend with drag-and-drop (login, board list, board detail view) are implemented and working. Board member invitations and update/delete endpoints are still being built. See [Roadmap](#roadmap--not-yet-implemented) below for the current state.
+> **Project status: in progress.** Backend (Board → Column → Card CRUD with authorization, JWT auth), real-time updates via SignalR, and a React frontend with drag-and-drop (login, board list, board detail view) are implemented and working. Board member invitations are still being built. See [Roadmap](#roadmap--not-yet-implemented) below for the current state.
 
 ## Why this project
 
