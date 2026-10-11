@@ -29,7 +29,7 @@ export async function logout() {
         try {
             await client.post("/auth/logout", { refreshToken });
         } catch {
-            
+            console.error("Authentication error");
         }
     }
 }
