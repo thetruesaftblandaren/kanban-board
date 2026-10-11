@@ -1,3 +1,5 @@
+![CI](https://github.com/<thetruesaftblandaren>/<kanban-board>/actions/workflows/ci.yml/badge.svg)
+
 # Realtime Kanban Board
 
 A Kanban board with real-time collaboration. When a user moves, creates, or edits a card, every other user viewing the same board will see the update instantly via SignalR, with no page refresh required.
@@ -29,14 +31,14 @@ Built as a portfolio project to demonstrate fullstack development skills as a ju
 - Drag-and-drop card movement (dnd-kit) with optimistic UI updates and automatic rollback on failure
 - Real-time updates via SignalR: card creation, updates, deletion, and moves are all broadcast live to everyone viewing the same board. SignalR is the single source of truth for card state changes in the frontend, avoiding duplicate-update bugs from having two independent update paths
 - Error handling
+- Unit tests (xUnit) for domain logic
+- CI pipeline via GitHub Actions (build + test on push)
 
 ### Stretch goals
 
 - Invite other users to a specific board
 - Comments on cards
 - Basic notifications (e.g. "X moved card Y")
-- Unit tests (xUnit) for backend logic
-- CI pipeline via GitHub Actions (build + test on push)
 
 ## Architecture
 
@@ -147,6 +149,8 @@ To be added
 - [x] Error handling
 - [x] Register new user
 - [x] Logout
+- [x] Unit tests (implemented functionality only)
+- [x] CI pipeline
 - [ ] Board member invitations (add non-owner members)
 - [ ] Stretch goals (see above)
 
