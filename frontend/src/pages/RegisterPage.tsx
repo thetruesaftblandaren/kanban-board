@@ -18,7 +18,7 @@ export default function RegisterPage() {
         try {
             await register(email, password, displayName);
             navigate("/boards");
-        } catch (err) {
+        } catch (err: unknown) {
             if (axios.isAxiosError(err) && Array.isArray(err.response?.data)) {
                 setError(err.response.data.join(" "));
             } else {
