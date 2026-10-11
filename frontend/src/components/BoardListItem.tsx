@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { updateBoard, deleteBoard } from "../api/boards";
 import type { BoardResponse } from "../types/api";
 import ErrorMessage from "./ErrorMessage";
@@ -11,7 +11,6 @@ interface Props {
 }
 
 export default function BoardListItem({ board, onUpdated, onDeleted }: Props) {
-    const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
     const [name, setName] = useState(board.name);
     const [actionError, setActionError] = useState<string | null>(null);
@@ -73,9 +72,7 @@ export default function BoardListItem({ board, onUpdated, onDeleted }: Props) {
 
     return (
         <li>
-            <button type="button" onClick={() => navigate(`/boards/${board.id}`)}>
-                {board.name}
-            </button>
+            <Link to={`/boards/${board.id}`}>{board.name}</Link>
             <button type="button" onClick={handleEdit}>Edit</button>
             <button type="button" onClick={handleDelete}>Delete</button>
             <ErrorMessage message={actionError} />
