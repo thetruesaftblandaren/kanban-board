@@ -275,7 +275,7 @@ export default function BoardDetailPage() {
         connection.invoke("LeaveBoard", boardId).catch(() => {});
       }
     };
-  }, [boardId]);
+  }, [boardId, navigate]);
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
