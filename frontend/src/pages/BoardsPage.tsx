@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { createBoard, getBoards } from "../api/boards";
 import type { BoardResponse } from "../types/api";
 import BoardListItem from "../components/BoardListItem";
