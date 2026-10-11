@@ -22,7 +22,7 @@ public class Card
         {
             Id = Guid.NewGuid(),
             Title = title,
-            Description = description,
+            Description = NormalizeDescription(description),
             ColumnId = columnId,
             Order = order,
             CreatedAt = DateTime.UtcNow
@@ -35,7 +35,7 @@ public class Card
             throw new ArgumentException("Card name cannot be empty.", nameof(title));
 
         Title = title;
-        Description = description;
+        Description = NormalizeDescription(description);
     }
 
     internal void SetOrder(int order)
@@ -46,5 +46,10 @@ public class Card
     internal void AssignToColumn(Guid columnId)
     {
         ColumnId = columnId;
+    }
+
+    private static string? NormalizeDescription(string? description)
+    {
+        return string.IsNullOrWhiteSpace(description) ? null : description;
     }
 }
