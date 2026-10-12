@@ -35,12 +35,12 @@ export default function BoardsPage() {
   if (loadError) return <ErrorMessage message={loadError} />
 
   return (
-    <div>
-      <h1>My Boards</h1>
+    <div className="mx-auto max-w-2xl space-y-6">
+      <h1 className="text-2xl font-semibold">My Boards</h1>
 
-      <ErrorMessage message={createBoardError} />
-      <form onSubmit={handleCreateBoard}>
+      <form onSubmit={handleCreateBoard} className="flex gap-2">
         <input
+          className="input"
           value={newBoardName}
           onChange={(e) => {
             setNewBoardName(e.target.value)
@@ -48,13 +48,14 @@ export default function BoardsPage() {
           }}
           placeholder="New board name"
         />
-        <button type="submit">Create board</button>
+        <button type="submit" className="btn-primary shrink-0">Create board</button>
       </form>
 
-      <ErrorMessage message={loadError} />
-      {boards.length === 0 && <p>No boards yet.</p>}
+      <ErrorMessage message={createBoardError} />
 
-      <ul>
+      {boards.length === 0 && <p className="text-slate-500">No boards yet.</p>}
+
+      <ul className="space-y-2">
         {boards.map((board) => (
           <BoardListItem
             key={board.id}

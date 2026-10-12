@@ -53,28 +53,37 @@ export default function BoardListItem({ board, onUpdated, onDeleted }: Props) {
 
     if (isEditing) {
         return (
-            <li>
-                <ErrorMessage message={actionError} />
-                <form onSubmit={handleSave}>
+            <li className="rounded-lg bg-white p-3 shadow-sm">
+                <form onSubmit={handleSave} className="flex gap-2">
                     <input
+                        className="input"
                         value={name}
                         onChange={(e) => {
                             setName(e.target.value);
                             setActionError(null);
                         }}
                     />
-                    <button type="submit">Save</button>
-                    <button type="button" onClick={handleCancel}>Cancel</button>
+                    <button type="submit" className="btn-primary">Save</button>
+                    <button type="button" className="btn-secondary" onClick={handleCancel}>Cancel</button>
                 </form>
+
+                <ErrorMessage message={actionError} />
             </li>
         );
     }
 
     return (
-        <li>
-            <Link to={`/boards/${board.id}`}>{board.name}</Link>
-            <button type="button" onClick={handleEdit}>Edit</button>
-            <button type="button" onClick={handleDelete}>Delete</button>
+        <li className="rounded-lg bg-white p-3 shadow-sm">
+            <div className="flex items-center justify-between">
+                <Link to={`/boards/${board.id}`} className="font-medium text-indigo-600 hover:underline">
+                    {board.name}
+                </Link>
+                <div className="flex gap-1">
+                    <button type="button" className="btn-secondary" onClick={handleEdit}>Edit</button>
+                    <button type="button" className="btn-danger" onClick={handleDelete}>Delete</button>
+                </div>
+            </div>
+            
             <ErrorMessage message={actionError} />
         </li>
     );

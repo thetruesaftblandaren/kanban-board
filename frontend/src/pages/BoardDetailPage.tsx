@@ -338,68 +338,70 @@ export default function BoardDetailPage() {
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-      <ErrorMessage message={dragError} />
-      <ErrorMessage message={boardActionError} />
+      <div className="space-y-4">
+        <ErrorMessage message={dragError} />
+        <ErrorMessage message={boardActionError} />
 
-      {isEditingBoard ? (
-        <form onSubmit={handleUpdateBoardName}>
-          <input value={boardName} onChange={(e) => {
-            setBoardName(e.target.value);
-            setBoardActionError(null);
-          }} />
-          <button type="submit">Save</button>
-          <button type="button" onClick={() => {
-            setBoardName(board!.name);
-            setBoardActionError(null);
-            setIsEditingBoard(false);
-          }} >
-            Cancel
-          </button>
+        {isEditingBoard ? (
+          <form onSubmit={handleUpdateBoardName} className="flex max-w-md gap-2">
+            <input className="input" value={boardName} onChange={(e) => {
+              setBoardName(e.target.value);
+              setBoardActionError(null);
+            }} />
+            <button type="submit" className="btn-primary">Save</button>
+            <button type="button" className="btn-secondary" onClick={() => {
+              setBoardName(board!.name);
+              setBoardActionError(null);
+              setIsEditingBoard(false);
+            }} >
+              Cancel
+            </button>
+          </form>
+        ) : (
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-semibold">{board!.name}</h1>
+            <button type="button" className="btn-secondary" onClick={() => {
+              setBoardName(board!.name);
+              setIsEditingBoard(true);
+            }}>Edit</button>
+            <button type="button" className="btn-danger" onClick={handleDeleteBoard}>Delete board</button>
+          </div>
+        )}
+
+        <ErrorMessage message={createColumnError} />
+        <form onSubmit={handleCreateColumn} className="flex max-w-md gap-2">
+          <input
+            className="input"
+            value={newColumnName}
+            onChange={(e) => {
+              setNewColumnName(e.target.value);
+              setCreateColumnError(null);
+            }}
+            placeholder="New column name"
+          />
+          <button type="submit" className="btn-primary shrink-0">Add column</button>
         </form>
-      ) : (
-        <div>
-          <h1 style={{ display: "inline" }}>{board!.name}</h1>
-          <button type="button" onClick={() => {
-            setBoardName(board!.name);
-            setIsEditingBoard(true);
-          }}>Edit</button>
-          <button type="button" onClick={handleDeleteBoard}>Delete board</button>
-        </div>
-      )}
 
-      <ErrorMessage message={createColumnError} />
-      <form onSubmit={handleCreateColumn}>
-        <input
-          value={newColumnName}
-          onChange={(e) => {
-            setNewColumnName(e.target.value);
-            setCreateColumnError(null);
-          }}
-          placeholder="New column name"
-        />
-        <button type="submit">Add column</button>
-      </form>
-
-      <SortableContext
-        items={[...columns].sort((a, b) => a.order - b.order).map((c) => c.id)}
-        strategy={horizontalListSortingStrategy}
-      >
-        <div style={{ display: "flex", gap: "1rem" }}>
-          {[...columns]
-            .sort((a, b) => a.order - b.order)
-            .map((column) => (
-              <DroppableColumn
-                key={column.id}
-                column={column}
-                cards={cards
-                  .filter((c) => c.columnId === column.id)
-                  .sort((a, b) => a.order - b.order)}
-                boardId={boardId!}
-              />
-            ))}
-        </div>
-      </SortableContext>
-      
+        <SortableContext
+          items={[...columns].sort((a, b) => a.order - b.order).map((c) => c.id)}
+          strategy={horizontalListSortingStrategy}
+        >
+          <div className="flex items-start gap-4 overflow-x-auto pb-4">
+            {[...columns]
+              .sort((a, b) => a.order - b.order)
+              .map((column) => (
+                <DroppableColumn
+                  key={column.id}
+                  column={column}
+                  cards={cards
+                    .filter((c) => c.columnId === column.id)
+                    .sort((a, b) => a.order - b.order)}
+                  boardId={boardId!}
+                />
+              ))}
+          </div>
+        </SortableContext>
+      </div> 
     </DndContext>
   );
 }

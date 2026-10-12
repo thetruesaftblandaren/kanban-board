@@ -78,43 +78,40 @@ export default function DroppableColumn({
     return (
         <div
             ref={setNodeRef}
-            style={{
-                border: "1px solid #ccc",
-                padding: "1rem",
-                minWidth: "200px",
-                backgroundColor: isOver ? "#f0f8ff" : "white",
-                transform: CSS.Transform.toString(transform),
-                transition,
-                opacity: isDragging ? 0.5 : 1,
-            }}
+            style={{ transform: CSS.Transform.toString(transform), transition }}
+            className={`w-72 shrink-0 rounded-lg p-3 ${
+                isOver ? "bg-indigo-50" : "bg-slate-200"
+            } ${isDragging ? "opacity-50" : ""}`}
         >
-            <ErrorMessage message={saveColumnError} />
+            
             {isEditingColumn ? (
-                <form onSubmit={handleSaveColumn}>
-                    <input value={columnName} onChange={(e) => {
+                <form onSubmit={handleSaveColumn} className="flex gap-1">
+                    <input className="input" value={columnName} onChange={(e) => {
                         setColumnName(e.target.value);
                         setSaveColumnError(null);
                     }} />
-                    <button type="submit">Save</button>
-                    <button type="button" onClick={handleCancelEditColumn}>Cancel</button>
+                    <button type="submit" className="btn-primary">Save</button>
+                    <button type="button" className="btn-secondary" onClick={handleCancelEditColumn}>Cancel</button>
                 </form>
             ) : (
-                <div>
+                <div className="flex items-center gap-2">
                     <span
                         {...attributes}
                         {...listeners}
-                        style={{cursor: "grab", marginRight: "0.5rem" }}
+                        className="cursor-grab select-none text-slate-400"
                     >
                         ⠿
                     </span>
-                    <h2 style={{ display: "inline" }}>{column.name}</h2>
-                    <button type="button" onClick={handleEditColumn}>Edit</button>
-                    <button type="button" onClick={handleDeleteColumn}>Delete</button>
+                    <h2 className="flex-1 font-semibold">{column.name}</h2>
+                    <button type="button" className="btn-secondary" onClick={handleEditColumn}>Edit</button>
+                    <button type="button" className="btn-danger" onClick={handleDeleteColumn}>Delete</button>
                 </div>
             )}
 
+            <ErrorMessage message={saveColumnError} />
+
             <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-                <ul style={{ listStyle: "none", padding: 0 }}>
+                <ul className="mt-3 space-y-2">
                     {cards.map((card) => (
                         <DraggableCard
                             key={card.id}
@@ -125,10 +122,11 @@ export default function DroppableColumn({
                 </ul>
             </SortableContext>
             
-
             <ErrorMessage message={createCardError} />
-            <form onSubmit={handleCreateCard}>
+
+            <form onSubmit={handleCreateCard} className="mt-3 space-y-2">
                 <input
+                    className="input"
                     value={newCardTitle}
                     onChange={(e) => {
                         setNewCardTitle(e.target.value)
@@ -137,11 +135,12 @@ export default function DroppableColumn({
                     placeholder="New card title"
                 />
                 <input
+                    className="input"
                     value={newCardDescription}
                     onChange={(e) => setNewCardDescription(e.target.value)}
                     placeholder="Description (optional)"
                 />
-                <button type="submit">Add card</button>
+                <button type="submit" className="btn-primary w-full">Add card</button>
             </form>
         </div>
     );

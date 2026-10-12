@@ -10,12 +10,18 @@ export default function Layout() {
     }
 
     return (
-        <div>
-            <nav>
-                <Link to="/boards">Boards</Link>
-                <button type="button" onClick={handleLogout}>Log out</button>
+        <div className="min-h-screen">
+            <nav className=" sticky top-0 z-50 flex items-center justify-between border-b borde-slate-200 bg-white px-6 py-3">
+                <Link to="/boards" className="text-lg font-semibold text-indigo-600 hover:underline" >
+                    Boards
+                </Link>
+                <button type="button" onClick={handleLogout} className="btn-secondary">
+                    Log out
+                </button>
             </nav>
-            <Outlet />
+            <main className="p-6">
+                <Outlet />
+            </main>
         </div>
     );
 }

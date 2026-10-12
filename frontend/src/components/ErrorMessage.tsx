@@ -1,9 +1,14 @@
 interface Props {
-    message: string | null;
+  message: string | null;
+  className?: string;
 }
 
-export default function ErrorMessage({ message }: Props) {
-    if (!message) return null;
+export default function ErrorMessage({ message, className = "" }: Props) {
+  if (!message) return null;
 
-    return <p style={{ color: "red"}}>{message}</p>;
+  return (
+    <p role="alert" className={`text-sm text-red-600 ${className}`}>
+      {message}
+    </p>
+  );
 }

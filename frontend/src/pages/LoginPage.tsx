@@ -22,36 +22,45 @@ export default function LoginPage() {
     }
     
     return (
-        <form onSubmit={handleSubmit}>
-            <h1>Log in</h1>
+        <div className="flex min-h-screen items-center justify-center">
+            <form
+                onSubmit={handleSubmit}
+                className="w-full max-w-sm space-y-4 rounded-lg bg-white p-8 shadow"
+            >
+                <h1 className="text-2xl font-semibold">Log in</h1>
 
-            <div>
-                <label htmlFor="email">Email</label>
-                <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                />
-            </div>
+                <div className="space-y-1">
+                    <label htmlFor="email" className="text-sm font-medium text-slate-700">Email</label>
+                    <input
+                        id="email"
+                        type="email"
+                        className="input"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                    />
+                </div>
 
-            <div>
-                <label htmlFor="password">Password</label>
-                <input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                />
-            </div>
+                <div className="space-y-1">
+                    <label htmlFor="password" className="text-sm font-medium text-slate-700">Password</label>
+                    <input
+                        id="password"
+                        type="password"
+                        className="input"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
+                </div>
 
-            <ErrorMessage message={error} />
+                <ErrorMessage message={error} />
 
-            <button type="submit">Log in</button>
+                <button type="submit" className="btn-primary w-full">Log in</button>
 
-            <p>Don't have an account? <Link to="/register">Register</Link></p>
-        </form>
+                <p className="text-center text-sm text-slate-600">
+                    Don't have an account? <Link to="/register" className="text-indigo-600 hover:underline">Register</Link>
+                </p>
+            </form>
+        </div>
     );
 }

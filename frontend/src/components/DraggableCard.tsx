@@ -20,12 +20,6 @@ export default function DraggableCard({ card, boardId }: Props) {
     const [description, setDescription] = useState(card.description ?? "");
     const [cardActionError, setCardActionError] = useState<string | null>(null);
 
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.5 : 1,
-    };
-
     function handleEdit() {
         setTitle(card.title);
         setDescription(card.description ?? "");
@@ -68,16 +62,16 @@ export default function DraggableCard({ card, boardId }: Props) {
 
     if (isEditing) {
         return (
-            <li style={{ border: "1px solid #ddd", padding: "0.5rem", marginBottom: "0.5rem" }}>
+            <li className="rounded-md bg-white p-3 shadow-sm">
                 <ErrorMessage message={cardActionError} />
-                <form onSubmit={handleSave}>
-                    <input value={title} onChange={(e) => {
+                <form onSubmit={handleSave} className="space-y-2">
+                    <input className="input" value={title} onChange={(e) => {
                         setTitle(e.target.value);
                         setCardActionError(null);
                     }} />
-                    <input value={description} onChange={(e) => setDescription(e.target.value)} />
-                    <button type="submit">Save</button>
-                    <button type="button" onClick={handleCancel}>Cancel</button>
+                    <input className="input" value={description} onChange={(e) => setDescription(e.target.value)} />
+                    <button type="submit" className="btn-primary">Save</button>
+                    <button type="button" className="btn-secondary" onClick={handleCancel}>Cancel</button>
                 </form>
             </li>
         )
@@ -86,34 +80,32 @@ export default function DraggableCard({ card, boardId }: Props) {
     return (
         <li
             ref={setNodeRef}
-            style={{
-                border: "1px solid #ddd",
-                padding: "0.5rem",
-                marginBottom: "0.5rem",
-                backgroundColor: "#fafafa",
-                cursor: "grab",
-                ...style,
-            }}
+            style={{ transform: CSS.Transform.toString(transform), transition }}
+            className={`cursor-grab rounded-md bg-white p-3 shadow-sm ${isDragging ? "opacity-50" : ""}`}
             {...listeners}
             {...attributes}
         >
-            <strong>{card.title}</strong>
-            {card.description && <p>{card.description}</p>}
+            <p className="font-medium">{card.title}</p>
+            {card.description && <p className="mt-1 text-sm text-slate-600">{card.description}</p>}
             <ErrorMessage message={cardActionError} />
-            <button
-                type="button"
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={handleEdit}
-            >
-                Edit
-            </button>
-            <button
-                type="button"
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={handleDelete}
-            >
-                Delete
-            </button>
+            <div>
+                <button
+                    type="button"
+                    className="btn-secondary"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={handleEdit}
+                >
+                    Edit
+                </button>
+                <button
+                    type="button"
+                    className="btn-danger"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={handleDelete}
+                >
+                    Delete
+                </button>
+            </div>
         </li>
     );
 }

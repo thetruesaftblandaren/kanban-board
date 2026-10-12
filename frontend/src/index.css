@@ -1,12 +1,25 @@
-body {
-  margin: 0;
-  font-family: system-ui, sans-serif;
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply bg-slate-100 text-slate-900 antialiased;
+  }
 }
 
-nav {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  padding: 0.5rem 1rem;
-  border-bottom: 1px solid #ddd;
+@layer components {
+  .btn-primary {
+    @apply rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700;
+  }
+  .btn-secondary {
+    @apply rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50;
+  }
+  .btn-danger {
+    @apply rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50;
+  }
+  .input {
+    @apply  w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none;
+  }
+  .error-text {
+    @apply text-sm text-red-600;
+  }
 }
