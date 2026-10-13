@@ -75,50 +75,66 @@ backend/
 - [.NET 10 SDK](https://dotnet.microsoft.com/)
 - [Node.js](https://nodejs.org/) (LTS)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- Bash for the scripts (on Windows, use Git Bash). Without Bash, follow the manual setup below.
 
-### Setup
+Clone the repository:
 
 ```bash
 git clone https://github.com/thetruesaftblandaren/kanban-board.git
 cd kanban-board
-
-# Copy environment template and fill in values (used by docker-compose)
-cp .env.example .env
-
-# Start PostgreSQL
-docker-compose up -d
 ```
 
-### Backend secrets
+### Quick start
 
-This project uses .NET user-secrets for local development, so no database password or JWT key is stored in the repo. After cloning:
+```bash
+./scripts/setup.sh   # first time only
+./scripts/dev.sh
+```
+
+`setup.sh` creates `.env` with a generated password, configures the backend secrets, installs frontend dependencies, starts the database and applies migrations. `dev.sh` starts the database, backend and frontend. Ctrl+C stops all three; the database content is kept in a Docker volume.
+
+The database password is set when the Docker volume is first created. If `.env` is later deleted or changed, the database keeps the old password and the backend fails to connect until the volume is recreated with `docker compose down -v` (this deletes the data).
+
+The app runs at `http://localhost:5173` and the API at `http://localhost:5093`.
+
+### Manual setup
+
+#### 1. Database
+
+```bash
+cp .env.example .env    # then set POSTGRES_PASSWORD in .env
+docker compose up -d
+```
+
+#### 2. Backend secrets
+
+The project uses .NET user-secrets for local development, so no password or JWT key is stored in the repo. Use the same password as in `.env`:
 
 ```bash
 cd backend/src/Kanban.Api
 dotnet user-secrets init
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=kanban;Username=kanban;Password=<your-local-password>"
-dotnet user-secrets set "Jwt:Key" "<your-generated-key, at least 32 random characters>"
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=kanban;Username=kanban;Password=<same password as in .env>"
+dotnet user-secrets set "Jwt:Key" "<at least 32 random characters>"
 ```
 
-### Run the backend
+#### 3. Backend
 
 ```bash
+dotnet tool install --global dotnet-ef    # once
 cd backend/src/Kanban.Api
 dotnet ef database update
 dotnet run
 ```
 
-### Run the frontend
+#### 4. Frontend
 
-Requires the backend to be running (see above) for API calls to work.
+In a second terminal, with the backend running:
 
 ```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
-
-Frontend will be available at `http://localhost:5173`.
 
 ### Run the tests
 
@@ -139,6 +155,7 @@ dotnet test backend
 - **Access and refresh tokens**: the access token is a JWT that lives for 15 minutes, and an axios interceptor renews it automatically. Refresh tokens are random strings stored only as SHA-256 hashes, valid for 7 days, single-use (rotated on every renewal), and revoked on logout. Because each renewal extends the session, an active user is never logged out. They are kept in `localStorage` for simplicity; `httpOnly` cookies would protect better against XSS but add CORS complexity and constrain hosting.
 - **`INotificationService` abstraction**: the interface lives in `Kanban.Application` and the SignalR implementation (`SignalRNotificationService`, `BoardHub`) in `Kanban.Infrastructure`, so the application layer has no dependency on SignalR.
 - **`Column` sorts its cards by `Order` before mutating them**: EF Core returns child collections in no guaranteed order, so removing and inserting by index put cards in the wrong place until the list was sorted by `Order` first. `Board` uses the same approach for columns.
+- **Local development setup and secrets**: setup.sh is designed to be idempotent, preserving existing configuration and secrets across repeated runs. Secrets are generated locally and never committed to version control. dev.sh manages the development processes and cleans them up when stopped with Ctrl+C.
 
 ## What I Learned
 
@@ -175,6 +192,7 @@ This section is kept up to date as the project progresses, rather than implying 
 - The Delete button on a board is shown to every member. The server only allows the owner to delete, so others get an error message.
 - Expired and revoked refresh tokens are not cleaned out of the database.
 - The unit tests cover domain logic only. They cannot catch bugs that depend on the order EF Core loads data in, which would need an integration test against a real database.
+- The API address (`localhost:5093`) and the allowed CORS origin (`localhost:5173`) are hardcoded for local development and need to become configuration before deploying.
 
 ## License
 
