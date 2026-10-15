@@ -10,7 +10,7 @@ import {
 import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import { getColumns, getCards, moveCard, createColumn, moveColumn, getBoardById, updateBoard, deleteBoard } from "../api/boards";
 import { getConnection } from "../api/signalr";
-import type { ColumnResponse, CardResponse, BoardResponse } from "../types/api";
+import type { ColumnResponse, CardResponse, BoardResponse, CardCategory } from "../types/api";
 import DroppableColumn from "../components/DroppableColumn";
 import ErrorMessage from "../components/ErrorMessage";
 
@@ -50,6 +50,7 @@ interface CardCreatedPayload {
   columnId: string;
   title: string;
   description: string | null;
+  category: CardCategory;
   order: number;
 }
 
@@ -57,6 +58,7 @@ interface CardUpdatedPayload {
   cardId: string;
   title: string;
   description: string | null;
+  category: CardCategory;
 }
 
 interface CardDeletedPayload {
@@ -217,6 +219,7 @@ export default function BoardDetailPage() {
             columnId: payload.columnId,
             title: payload.title,
             description: payload.description,
+            category: payload.category,
             order: payload.order,
             createdAt: new Date().toISOString(),
           },
@@ -228,7 +231,7 @@ export default function BoardDetailPage() {
       setCards((prevCards) =>
         prevCards.map((card) =>
           card.id === payload.cardId
-            ? { ...card, title: payload.title, description: payload.description }
+            ? { ...card, title: payload.title, description: payload.description, category: payload.category }
             : card
         )
       );

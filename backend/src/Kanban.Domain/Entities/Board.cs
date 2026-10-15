@@ -98,15 +98,15 @@ public class Board
         _columns.AddRange(sorted);
     }
 
-    public Card AddCard(Guid columnId, string title, string? description)
+    public Card AddCard(Guid columnId, string title, string? description, CardCategory category)
     {
         var column = _columns.FirstOrDefault(c => c.Id == columnId)
             ?? throw new InvalidOperationException("Column not found on this board.");
         
-        return column.AddCard(title, description);
+        return column.AddCard(title, description, category);
     }
 
-    public void UpdateCard(Guid columnId, Guid cardId, string title, string? description)
+    public void UpdateCard(Guid columnId, Guid cardId, string title, string? description, CardCategory category)
     {
         var column = _columns.FirstOrDefault(c => c.Id == columnId)
             ?? throw new InvalidOperationException("Column not found on this board.");
@@ -114,7 +114,7 @@ public class Board
         var card = column.Cards.FirstOrDefault(c => c.Id == cardId)
             ?? throw new InvalidOperationException("Column not found on this board.");
 
-        card.Update(title, description);
+        card.Update(title, description, category);
     }
 
     public void DeleteCard(Guid columnId, Guid cardId)

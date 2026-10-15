@@ -75,18 +75,18 @@ public class SignalRNotificationService : INotificationService
             .SendAsync("CardMoved", new { cardId, columnId, newOrder });
     }
 
-    public async Task NotifyCardCreatedAsync(Guid boardId, Guid cardId, Guid columnId, string title, string? description, int order)
+    public async Task NotifyCardCreatedAsync(Guid boardId, Guid cardId, Guid columnId, string title, string? description, CardCategory category, int order)
     {
         await _hubContext.Clients
             .Group(BoardHub.GroupName(boardId.ToString()))
-            .SendAsync("CardCreated", new { cardId, columnId, title, description, order });
+            .SendAsync("CardCreated", new { cardId, columnId, title, description, category, order });
     }
 
-    public async Task NotifyCardUpdatedAsync(Guid boardId, Guid cardId, string title, string? description)
+    public async Task NotifyCardUpdatedAsync(Guid boardId, Guid cardId, string title, string? description, CardCategory category)
     {
         await _hubContext.Clients
             .Group(BoardHub.GroupName(boardId.ToString()))
-            .SendAsync("CardUpdated", new { cardId, title, description });
+            .SendAsync("CardUpdated", new { cardId, title, description, category });
     }
 
     public async Task NotifyCardDeletedAsync(Guid boardId, Guid cardId)

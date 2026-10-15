@@ -1,3 +1,5 @@
+using Kanban.Domain.Entities;
+
 namespace Kanban.Application.Common;
 
 public interface INotificationService
@@ -18,7 +20,7 @@ public interface INotificationService
     /* Cards */
 
     Task NotifyCardMovedAsync(Guid boardId, Guid cardId, Guid columnId, int newOrder);
-    Task NotifyCardCreatedAsync(Guid boardId, Guid cardId, Guid columnId, string title, string? description, int order);
-    Task NotifyCardUpdatedAsync(Guid boardId, Guid cardId, string title, string? description);
+    Task NotifyCardCreatedAsync(Guid boardId, Guid cardId, Guid columnId, string title, string? description, CardCategory category, int order);
+    Task NotifyCardUpdatedAsync(Guid boardId, Guid cardId, string title, string? description, CardCategory category);
     Task NotifyCardDeletedAsync(Guid boardId, Guid cardId);
 }

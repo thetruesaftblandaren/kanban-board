@@ -1,3 +1,5 @@
+using Kanban.Domain.Entities;
+
 namespace Kanban.Application.Cards;
 
-public record UpdateCardRequest(string Title, string? Description);
+public record UpdateCardRequest(string Title, string? Description, CardCategory Category);

@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using Kanban.Application.Auth;
 using Kanban.Application.Boards;
 using Kanban.Application.Cards;
@@ -49,7 +50,8 @@ builder.Services.AddAuthentication(options =>
     });
 
 builder.Services.AddAuthorization();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<IIdentityService, IdentityService>();
@@ -72,7 +74,8 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddSignalR();
+builder.Services.AddSignalR()
+    .AddJsonProtocol(o => o.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 var app = builder.Build();
 

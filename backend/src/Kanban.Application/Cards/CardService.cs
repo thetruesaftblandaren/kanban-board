@@ -28,12 +28,12 @@ public class CardService : ICardService
 
         try
         {
-            var card = board.AddCard(columnId, request.Title, request.Description);
+            var card = board.AddCard(columnId, request.Title, request.Description, request.Category);
             await _boardRepository.SaveChangesAsync();
 
-            await _notificationService.NotifyCardCreatedAsync(boardId, card.Id, columnId, card.Title, card.Description, card.Order);
+            await _notificationService.NotifyCardCreatedAsync(boardId, card.Id, columnId, card.Title, card.Description, card.Category, card.Order);
 
-            return Result<CardResponse>.Ok(new CardResponse(card.Id, card.Title, card.Description, card.ColumnId, card.Order, card.CreatedAt));
+            return Result<CardResponse>.Ok(new CardResponse(card.Id, card.Title, card.Description, card.Category, card.ColumnId, card.Order, card.CreatedAt));
         }
         catch (ArgumentException ex)
         {
@@ -60,7 +60,7 @@ public class CardService : ICardService
 
         var response = column.Cards
             .OrderBy(c => c.Order)
-            .Select(c => new CardResponse(c.Id, c.Title, c.Description, c.ColumnId, c.Order, c.CreatedAt))
+            .Select(c => new CardResponse(c.Id, c.Title, c.Description, c.Category, c.ColumnId, c.Order, c.CreatedAt))
             .ToList();
 
         return Result<ICollection<CardResponse>>.Ok(response);
@@ -100,7 +100,7 @@ public class CardService : ICardService
                 }
             }
             
-            return Result<CardResponse>.Ok(new CardResponse(movedCard.Id, movedCard.Title, movedCard.Description, movedCard.ColumnId, movedCard.Order, movedCard.CreatedAt));
+            return Result<CardResponse>.Ok(new CardResponse(movedCard.Id, movedCard.Title, movedCard.Description, movedCard.Category, movedCard.ColumnId, movedCard.Order, movedCard.CreatedAt));
         }
         catch (InvalidOperationException ex)
         {
@@ -123,14 +123,14 @@ public class CardService : ICardService
 
         try
         {
-            board.UpdateCard(columnId, cardId, request.Title, request.Description);
+            board.UpdateCard(columnId, cardId, request.Title, request.Description, request.Category);
             await _boardRepository.SaveChangesAsync();
 
             var card = board.Columns.First(c => c.Id == columnId).Cards.First(c => c.Id == cardId);
 
-            await _notificationService.NotifyCardUpdatedAsync(boardId, card.Id, card.Title, card.Description);
+            await _notificationService.NotifyCardUpdatedAsync(boardId, card.Id, card.Title, card.Description, card.Category);
 
-            return Result<CardResponse>.Ok(new CardResponse(card.Id, card.Title, card.Description, card.ColumnId, card.Order, card.CreatedAt));
+            return Result<CardResponse>.Ok(new CardResponse(card.Id, card.Title, card.Description, card.Category, card.ColumnId, card.Order, card.CreatedAt));
         }
         catch (ArgumentException ex)
         {

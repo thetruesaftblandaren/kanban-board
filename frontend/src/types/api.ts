@@ -1,3 +1,6 @@
+export type CardCategory = "Task" | "Bug" | "Feature";
+export const CARD_CATEGORIES: CardCategory[] = ["Task", "Bug", "Feature"];
+
 export interface AuthResponse {
     token: string;
     refreshToken: string;
@@ -23,6 +26,7 @@ export interface CardResponse {
     id: string;
     title: string;
     description: string | null;
+    category: CardCategory;
     columnId: string;
     order: number;
     createdAt: string;

@@ -29,6 +29,7 @@ Built as a portfolio project to demonstrate fullstack development skills as a ju
 - Drag and drop a column to change order
 - React frontend: login, register, logout, board list, board detail view, and create/edit/delete forms for boards, columns, and cards
 - Drag-and-drop for cards and columns (dnd-kit). The UI updates when the server's SignalR broadcast arrives, so every client, including the one dragging, goes through the same path.
+- Card categories (Task, Bug, Feature), selectable when creating or editing a card and shown as a badge on the card, synced live via SignalR
 - Real-time updates via SignalR: card and column changes (create, update, delete, move) and board rename/delete are broadcast live to everyone viewing the same board. On the board page, SignalR is the single source of truth for UI state: components only call the REST API and never update state themselves, which avoids duplicate-update bugs.
 - Sessions stay alive while the user is active: short-lived access tokens (15 min) are renewed automatically using rotating refresh tokens stored server-side as hashes. Logout revokes the refresh token.
 - Error handling: Validation in the domain layer, surfaced as error messages in the UI
@@ -156,6 +157,7 @@ dotnet test backend
 - **`INotificationService` abstraction**: the interface lives in `Kanban.Application` and the SignalR implementation (`SignalRNotificationService`, `BoardHub`) in `Kanban.Infrastructure`, so the application layer has no dependency on SignalR.
 - **`Column` sorts its cards by `Order` before mutating them**: EF Core returns child collections in no guaranteed order, so removing and inserting by index put cards in the wrong place until the list was sorted by `Order` first. `Board` uses the same approach for columns.
 - **Local development setup and secrets**: setup.sh is designed to be idempotent, preserving existing configuration and secrets across repeated runs. Secrets are generated locally and never committed to version control. dev.sh manages the development processes and cleans them up when stopped with Ctrl+C.
+- **Fixed CardCategory enum**: categories are defined as a fixed enum, stored as text in the database, and serialized as strings over REST and SignalR. Validation happens in the domain using Enum.IsDefined. The default (Task) is applied only in CreateCardRequest; updates require the category to be specified explicitly, preventing a missing field from silently resetting it.
 
 ## What I Learned
 
@@ -179,8 +181,8 @@ To be added
 - [x] Session renewal with refresh tokens
 - [x] Unit tests (implemented functionality only)
 - [x] CI pipeline
-- [ ] Styling
-- [ ] Card categories (bug / feature / task)
+- [x] Styling
+- [x] Card categories (bug / feature / task)
 - [ ] Board member invitations (add non-owner members)
 - [ ] Assign cards to board members (requires invitations)
 
@@ -193,6 +195,7 @@ This section is kept up to date as the project progresses, rather than implying 
 - Expired and revoked refresh tokens are not cleaned out of the database.
 - The unit tests cover domain logic only. They cannot catch bugs that depend on the order EF Core loads data in, which would need an integration test against a real database.
 - The API address (`localhost:5093`) and the allowed CORS origin (`localhost:5173`) are hardcoded for local development and need to become configuration before deploying.
+- Card categories are predefined and cannot be configured for each `Board`.
 
 ## License
 

@@ -18,9 +18,9 @@ public class BoardMoveTests : IDisposable
         column0 = board.AddColumn("Test0");
         column1 = board.AddColumn("Test1");
         column2 = board.AddColumn("Test2");
-        card0 = board.AddCard(column0.Id, "Test0", "Test0");
-        card1 = board.AddCard(column0.Id, "Test1", "Test1");
-        card2 = board.AddCard(column0.Id, "Test2", "Test2");
+        card0 = board.AddCard(column0.Id, "Test0", "Test0", CardCategory.Task);
+        card1 = board.AddCard(column0.Id, "Test1", "Test1", CardCategory.Task);
+        card2 = board.AddCard(column0.Id, "Test2", "Test2", CardCategory.Task);
     }
 
     public void Dispose()
@@ -80,8 +80,8 @@ public class BoardMoveTests : IDisposable
     public void MoveCard_ToAnotherColumn_UpdatesBothColumns()
     {
         // Adding some extra cards to check that they're ordered correctly
-        var card3 = board!.AddCard(column1!.Id, "Test3", "Test3");
-        var card4 = board.AddCard(column1!.Id, "Test4", "Test4");
+        var card3 = board!.AddCard(column1!.Id, "Test3", "Test3", CardCategory.Task);
+        var card4 = board.AddCard(column1!.Id, "Test4", "Test4", CardCategory.Task);
 
         Assert.Equal(0, card0!.Order);
         Assert.Equal(1, card1!.Order);
@@ -139,12 +139,6 @@ public class BoardMoveTests : IDisposable
     }
 
     [Fact]
-    public void MoveCard_UnknownCard_Throws()
-    {
-        Assert.Throws<InvalidOperationException>(() => board!.MoveCard(Guid.NewGuid(), column0!.Id, 3));
-    }
-
-    [Fact]
     public void MoveCard_SameColumnTwice_StaysConsistent()
     {
         Assert.Equal(0, card0!.Order);
@@ -162,6 +156,22 @@ public class BoardMoveTests : IDisposable
         Assert.Equal(0, card1.Order);
         Assert.Equal(1, card2.Order);
         Assert.Equal(2, card0.Order);
+    }
+
+    [Fact]
+    public void MoveCard_KeepsCategory()
+    {
+        Assert.Equal(CardCategory.Task, card0!.Category);
+
+        board!.MoveCard(card0.Id, column1!.Id, 0);
+
+        Assert.Equal(CardCategory.Task, card0.Category);
+    }
+
+    [Fact]
+    public void MoveCard_UnknownCard_Throws()
+    {
+        Assert.Throws<InvalidOperationException>(() => board!.MoveCard(Guid.NewGuid(), column0!.Id, 3));
     }
 
     [Fact]

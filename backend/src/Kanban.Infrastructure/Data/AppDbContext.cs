@@ -45,6 +45,8 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
             c.HasMany(x => x.Cards).WithOne().HasForeignKey(card => card.ColumnId).OnDelete(DeleteBehavior.Cascade);
         });
 
+        builder.Entity<Card>().Property(c => c.Category).HasConversion<string>().HasMaxLength(20);
+
         // Should be unique despite having a surrogate key
         builder.Entity<BoardMember>()
             .HasIndex(bm => new { bm.UserId, bm.BoardId })

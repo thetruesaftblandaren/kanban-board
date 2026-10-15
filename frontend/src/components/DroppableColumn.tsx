@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useSortable, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { ColumnResponse, CardResponse } from "../types/api";
+import { type ColumnResponse, type CardResponse, CARD_CATEGORIES, type CardCategory } from "../types/api";
 import { createCard, updateColumn, deleteColumn } from "../api/boards";
 import DraggableCard from "./DraggableCard";
 import ErrorMessage from "./ErrorMessage";
@@ -20,6 +20,7 @@ export default function DroppableColumn({
     const { attributes, listeners, setNodeRef, transform, transition, isOver, isDragging } = useSortable({ id: column.id });
     const [newCardTitle, setNewCardTitle] = useState("");
     const [newCardDescription, setNewCardDescription] = useState("");
+    const [category, setCategory] = useState<CardCategory>("Task");
     const [createCardError, setCreateCardError] = useState<string | null>(null);
 
     const [isEditingColumn, setIsEditingColumn] = useState(false);
@@ -33,7 +34,8 @@ export default function DroppableColumn({
             await createCard(boardId,
                 column.id,
                 newCardTitle,
-                newCardDescription
+                newCardDescription,
+                category
             );
             setNewCardTitle("");
             setNewCardDescription("");
@@ -140,6 +142,9 @@ export default function DroppableColumn({
                     onChange={(e) => setNewCardDescription(e.target.value)}
                     placeholder="Description (optional)"
                 />
+                <select className="input" value={category} onChange={(e) => setCategory(e.target.value as CardCategory)}>
+                    {CARD_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
                 <button type="submit" className="btn-primary w-full">Add card</button>
             </form>
         </div>

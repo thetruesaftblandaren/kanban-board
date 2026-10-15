@@ -27,13 +27,13 @@ public class Column
         };
     }
 
-    internal Card AddCard(string title, string? description)
+    internal Card AddCard(string title, string? description, CardCategory category)
     {
         if (string.IsNullOrWhiteSpace(title))
             throw new ArgumentException("Card name cannot be empty.", nameof(title));
 
         var order = Cards.Count;
-        var card = Card.Create(title, description, Id, order);
+        var card = Card.Create(title, description, category, Id, order);
         _cards.Add(card);
         return card;
     }

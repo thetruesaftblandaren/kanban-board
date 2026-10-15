@@ -1,5 +1,5 @@
 import client from "./client";
-import type { BoardResponse, ColumnResponse, CardResponse } from "../types/api";
+import type { BoardResponse, ColumnResponse, CardResponse, CardCategory } from "../types/api";
 
 /* Boards */
 
@@ -62,9 +62,15 @@ export async function getCards(boardId: string, columnId: string): Promise<CardR
     return repsonse.data;
 }
 
-export async function createCard(boardId: string, columnId: string, title: string, description: string | null): Promise<CardResponse> {
+export async function createCard(
+    boardId: string,
+    columnId: string,
+    title: string,
+    description: string | null,
+    category: CardCategory
+): Promise<CardResponse> {
     const response = await client.post<CardResponse>(`/boards/${boardId}/columns/${columnId}/cards`,
-        { title, description }
+        { title, description, category }
     );
     return response.data;
 }
@@ -74,11 +80,12 @@ export async function updateCard(
     columnId: string,
     cardId: string,
     title: string,
-    description: string | null
+    description: string | null,
+    category: CardCategory
 ): Promise<CardResponse> {
     const response = await client.put<CardResponse>(
         `/boards/${boardId}/columns/${columnId}/cards/${cardId}`,
-        { title, description }
+        { title, description, category }
     );
     return response.data;
 }
