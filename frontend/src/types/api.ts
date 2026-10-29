@@ -1,4 +1,5 @@
 export type CardCategory = "Task" | "Bug" | "Feature";
+export type BoardRole = "Owner" | "Editor" | "Viewer";
 export const CARD_CATEGORIES: CardCategory[] = ["Task", "Bug", "Feature"];
 
 export interface AuthResponse {
@@ -13,6 +14,12 @@ export interface BoardResponse {
     name: string;
     ownerId: string;
     createdAt: string;
+}
+
+export interface BoardMemberResponse {
+    userId: string;
+    displayName: string;
+    role: BoardRole;
 }
 
 export interface ColumnResponse {

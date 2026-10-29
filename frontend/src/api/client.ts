@@ -9,6 +9,7 @@ const client = axios.create({ baseURL: API_URL });
 function clearSession() {
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
+    localStorage.RemoveItem("userId");
 }
 
 async function refreshAccessToken(): Promise<string> {
@@ -18,6 +19,7 @@ async function refreshAccessToken(): Promise<string> {
     const response = await axios.post<AuthResponse>(`${API_URL}/auth/refresh`, { refreshToken });
     localStorage.setItem("token", response.data.token);
     localStorage.setItem("refreshToken", response.data.refreshToken);
+    localStorage.setItem("userId", response.data.userId);
     return response.data.token;
 }
 

@@ -3,6 +3,7 @@ import { createBoard, getBoards } from "../api/boards";
 import type { BoardResponse } from "../types/api";
 import BoardListItem from "../components/BoardListItem";
 import ErrorMessage from "../components/ErrorMessage";
+import { ensureConnected, getConnection } from "../api/signalr";
 
 export default function BoardsPage() {
   const [boards, setBoards] = useState<BoardResponse[]>([]);
@@ -17,6 +18,21 @@ export default function BoardsPage() {
       .catch(() => setLoadError("Failed to load boards."))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    const connection = getConnection();
+
+    function handleBoardListChanged() {
+      getBoards().then(setBoards).catch(() => []);
+    }
+
+    connection.on("BoardListChanged", handleBoardListChanged);
+    ensureConnected().catch((err) => console.error("SignalR:", err));
+
+    return () => {
+      connection.off("BoardListChanged", handleBoardListChanged);
+    }
+  })
 
   async function handleCreateBoard(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();

@@ -1,5 +1,5 @@
 import client from "./client";
-import type { BoardResponse, ColumnResponse, CardResponse, CardCategory } from "../types/api";
+import type { BoardResponse, ColumnResponse, CardResponse, CardCategory, BoardMemberResponse, BoardRole } from "../types/api";
 
 /* Boards */
 
@@ -11,6 +11,25 @@ export async function getBoards(): Promise<BoardResponse[]> {
 export async function getBoardById(boardId: string): Promise<BoardResponse> {
   const response = await client.get<BoardResponse>(`/boards/${boardId}`);
   return response.data;
+}
+
+export async function getMembers(boardId: string): Promise<BoardMemberResponse[]> {
+    const response = await client.get<BoardMemberResponse[]>(`/boards/${boardId}/members`);
+    return response.data;
+}
+
+export async function inviteMember(boardId: string, email: string, role: BoardRole): Promise<BoardMemberResponse> {
+    const response = await client.post<BoardMemberResponse>(`/boards/${boardId}/members`, { email, role });
+    return response.data;
+}
+
+export async function changeMemberRole(boardId: string, userId: string, role: BoardRole): Promise<BoardMemberResponse> {
+    const response = await client.put<BoardMemberResponse>(`/boards/${boardId}/members/${userId}`, { role });
+    return response.data;
+}
+
+export async function removeMember(boardId: string, userId: string): Promise<void> {
+    await client.delete(`boards/${boardId}/members/${userId}`)
 }
 
 export async function createBoard(name: string): Promise<BoardResponse> {

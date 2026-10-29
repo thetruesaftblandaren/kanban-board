@@ -14,11 +14,13 @@ const CATEGORY_STYLES: Record<CardCategory, string> = {
 interface Props {
     card: CardResponse;
     boardId: string;
+    canEdit: boolean;
 }
 
-export default function DraggableCard({ card, boardId }: Props) {
+export default function DraggableCard({ card, boardId, canEdit }: Props) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: card.id,
+        disabled: !canEdit
     });
 
     const [isEditing, setIsEditing] = useState(false);
@@ -72,8 +74,8 @@ export default function DraggableCard({ card, boardId }: Props) {
 
     if (isEditing) {
         return (
-            <li className="rounded-md bg-white p-3 shadow-sm">
-                <ErrorMessage message={cardActionError} />
+            <li className="rounded-md border-slate-200 bg-white p-3 shadow-sm">
+                <ErrorMessage message={cardActionError} className="mb-2" />
                 <form onSubmit={handleSave} className="space-y-2">
                     <input className="input" value={title} onChange={(e) => {
                         setTitle(e.target.value);
@@ -83,8 +85,11 @@ export default function DraggableCard({ card, boardId }: Props) {
                     <select className="input" value={category} onChange={(e) => setCategory(e.target.value as CardCategory)}>
                         {CARD_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                     </select>
-                    <button type="submit" className="btn-primary">Save</button>
-                    <button type="button" className="btn-secondary" onClick={handleCancel}>Cancel</button>
+                    <div className="flex gap-1">
+                        <button type="submit" className="btn-primary">Save</button>
+                        <button type="button" className="btn-secondary" onClick={handleCancel}>Cancel</button>
+                    </div>
+                    
                 </form>
             </li>
         )
@@ -94,34 +99,45 @@ export default function DraggableCard({ card, boardId }: Props) {
         <li
             ref={setNodeRef}
             style={{ transform: CSS.Transform.toString(transform), transition }}
-            className={`cursor-grab rounded-md bg-white p-3 shadow-sm ${isDragging ? "opacity-50" : ""}`}
+            className={`group rounded-md border border-slate-200 bg-white p-3 shadow-sm ${
+                canEdit ? "cursor-grab hover:shadow" : ""
+            } ${isDragging ? "opacity-50" : ""}`}
             {...listeners}
             {...attributes}
         >
-            <span className={`inline-block rounded px-1.5 py-0.5 text-xs font-medium ${CATEGORY_STYLES[card.category]}`}>
-                {card.category}
-            </span>
-            <p className="font-medium">{card.title}</p>
-            {card.description && <p className="mt-1 text-sm text-slate-600">{card.description}</p>}
-            <ErrorMessage message={cardActionError} />
             <div>
-                <button
-                    type="button"
-                    className="btn-secondary"
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onClick={handleEdit}
-                >
-                    Edit
-                </button>
-                <button
-                    type="button"
-                    className="btn-danger"
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onClick={handleDelete}
-                >
-                    Delete
-                </button>
+                <span className={`inline-block rounded px-1.5 py-0.5 text-xs font-medium ${CATEGORY_STYLES[card.category]}`}>
+                    {card.category}
+                </span>
+                {/* Add assignee avatar here later */}
             </div>
+            
+            <p className="mt-2 font-medium leading-snug">{card.title}</p>
+            {card.description && <p className="mt-1 line-clamp-3 text-sm text-slate-600">{card.description}</p>}
+
+            <ErrorMessage message={cardActionError} />
+
+            {canEdit && (
+                <div className="mt3- flex gap-1 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
+                    <button
+                        type="button"
+                        className="btn-secondary"
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={handleEdit}
+                    >
+                        Edit
+                    </button>
+                    <button
+                        type="button"
+                        className="btn-danger"
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={handleDelete}
+                    >
+                        Delete
+                    </button>
+                </div>
+            )}
+
         </li>
     );
 }

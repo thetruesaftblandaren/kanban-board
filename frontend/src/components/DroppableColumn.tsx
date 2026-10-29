@@ -10,14 +10,16 @@ interface Props {
     column: ColumnResponse;
     cards: CardResponse[];
     boardId: string;
+    canEdit: boolean;
 }
 
 export default function DroppableColumn({
     column,
     cards,
     boardId,
+    canEdit,
 }: Props) {
-    const { attributes, listeners, setNodeRef, transform, transition, isOver, isDragging } = useSortable({ id: column.id });
+    const { attributes, listeners, setNodeRef, transform, transition, isOver, isDragging } = useSortable({ id: column.id, disabled: !canEdit });
     const [newCardTitle, setNewCardTitle] = useState("");
     const [newCardDescription, setNewCardDescription] = useState("");
     const [category, setCategory] = useState<CardCategory>("Task");
@@ -84,31 +86,31 @@ export default function DroppableColumn({
             className={`w-72 shrink-0 rounded-lg p-3 ${
                 isOver ? "bg-indigo-50" : "bg-slate-200"
             } ${isDragging ? "opacity-50" : ""}`}
-        >
-            
-            {isEditingColumn ? (
-                <form onSubmit={handleSaveColumn} className="flex gap-1">
-                    <input className="input" value={columnName} onChange={(e) => {
-                        setColumnName(e.target.value);
-                        setSaveColumnError(null);
-                    }} />
-                    <button type="submit" className="btn-primary">Save</button>
-                    <button type="button" className="btn-secondary" onClick={handleCancelEditColumn}>Cancel</button>
-                </form>
-            ) : (
-                <div className="flex items-center gap-2">
-                    <span
-                        {...attributes}
-                        {...listeners}
-                        className="cursor-grab select-none text-slate-400"
-                    >
-                        ⠿
-                    </span>
-                    <h2 className="flex-1 font-semibold">{column.name}</h2>
-                    <button type="button" className="btn-secondary" onClick={handleEditColumn}>Edit</button>
-                    <button type="button" className="btn-danger" onClick={handleDeleteColumn}>Delete</button>
-                </div>
-            )}
+        >    
+            {canEdit && (
+                isEditingColumn ? (
+                    <form onSubmit={handleSaveColumn} className="flex gap-1">
+                        <input className="input" value={columnName} onChange={(e) => {
+                            setColumnName(e.target.value);
+                            setSaveColumnError(null);
+                        }} />
+                        <button type="submit" className="btn-primary">Save</button>
+                        <button type="button" className="btn-secondary" onClick={handleCancelEditColumn}>Cancel</button>
+                    </form>
+                ) : (
+                    <div className="flex items-center gap-2">
+                        <span
+                            {...attributes}
+                            {...listeners}
+                            className="cursor-grab select-none text-slate-400"
+                        >
+                            ⠿
+                        </span>
+                        <h2 className="flex-1 font-semibold">{column.name}</h2>
+                        <button type="button" className="btn-secondary" onClick={handleEditColumn}>Edit</button>
+                        <button type="button" className="btn-danger" onClick={handleDeleteColumn}>Delete</button>
+                    </div>
+            ))}
 
             <ErrorMessage message={saveColumnError} />
 
@@ -119,6 +121,7 @@ export default function DroppableColumn({
                             key={card.id}
                             card={card}
                             boardId={boardId}
+                            canEdit={canEdit}
                         />
                     ))}
                 </ul>
@@ -126,27 +129,30 @@ export default function DroppableColumn({
             
             <ErrorMessage message={createCardError} />
 
-            <form onSubmit={handleCreateCard} className="mt-3 space-y-2">
-                <input
-                    className="input"
-                    value={newCardTitle}
-                    onChange={(e) => {
-                        setNewCardTitle(e.target.value)
-                        setCreateCardError(null);
-                    }}
-                    placeholder="New card title"
-                />
-                <input
-                    className="input"
-                    value={newCardDescription}
-                    onChange={(e) => setNewCardDescription(e.target.value)}
-                    placeholder="Description (optional)"
-                />
-                <select className="input" value={category} onChange={(e) => setCategory(e.target.value as CardCategory)}>
-                    {CARD_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-                <button type="submit" className="btn-primary w-full">Add card</button>
-            </form>
+            { canEdit && (
+                <form onSubmit={handleCreateCard} className="mt-3 space-y-2">
+                    <input
+                        className="input"
+                        value={newCardTitle}
+                        onChange={(e) => {
+                            setNewCardTitle(e.target.value)
+                            setCreateCardError(null);
+                        }}
+                        placeholder="New card title"
+                    />
+                    <input
+                        className="input"
+                        value={newCardDescription}
+                        onChange={(e) => setNewCardDescription(e.target.value)}
+                        placeholder="Description (optional)"
+                    />
+                    <select className="input" value={category} onChange={(e) => setCategory(e.target.value as CardCategory)}>
+                        {CARD_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <button type="submit" className="btn-primary w-full">Add card</button>
+                </form>
+            )}
+
         </div>
     );
 }

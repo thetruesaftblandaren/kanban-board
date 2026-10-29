@@ -2,9 +2,12 @@ import client from "./client";
 import { stopConnection } from "./signalr";
 import type { AuthResponse } from "../types/api";
 
+export const getCurrentUserId = () => localStorage.getItem("userId");
+
 function saveSession(data: AuthResponse) {
     localStorage.setItem("token", data.token);
     localStorage.setItem("refreshToken", data.refreshToken);
+    localStorage.setItem("userId", data.userId);
 }
 
 export async function login(email: string, password: string): Promise<AuthResponse> {
@@ -23,6 +26,7 @@ export async function logout() {
     const refreshToken = localStorage.getItem("refreshToken");
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userId");
     await stopConnection();
 
     if (refreshToken) {

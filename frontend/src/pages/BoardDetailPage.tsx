@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   DndContext,
@@ -8,11 +8,13 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
-import { getColumns, getCards, moveCard, createColumn, moveColumn, getBoardById, updateBoard, deleteBoard } from "../api/boards";
-import { getConnection } from "../api/signalr";
-import type { ColumnResponse, CardResponse, BoardResponse, CardCategory } from "../types/api";
+import { getColumns, getCards, moveCard, createColumn, moveColumn, getBoardById, updateBoard, deleteBoard, getMembers } from "../api/boards";
+import { ensureConnected, getConnection } from "../api/signalr";
+import type { ColumnResponse, CardResponse, BoardResponse, CardCategory, BoardMemberResponse, BoardRole } from "../types/api";
 import DroppableColumn from "../components/DroppableColumn";
 import ErrorMessage from "../components/ErrorMessage";
+import { getCurrentUserId } from "../api/auth";
+import MembersPanel from "../components/MembersPanel";
 
 interface BoardRenamedPayload {
   boardId: string;
@@ -65,6 +67,20 @@ interface CardDeletedPayload {
   cardId: string;
 }
 
+async function fetchBoardData(boardId: string) {
+  const [board, members, columns] = await Promise.all([
+    getBoardById(boardId),
+    getMembers(boardId),
+    getColumns(boardId),
+  ]);
+
+  const cardLists = await Promise.all(columns.map((c) => getCards(boardId, c.id)));
+
+  return { board, members, columns, cards: cardLists.flat() }
+}
+
+type BoardData = Awaited<ReturnType<typeof fetchBoardData>>;
+
 // The displayed boardname becomes empty upon trying to set it to an empty string (and failing). Don't know how to fix it since board isn't added in this function.
 export default function BoardDetailPage() {
   const [board, setBoard] = useState<BoardResponse | null>(null);
@@ -81,6 +97,12 @@ export default function BoardDetailPage() {
 
   const [cards, setCards] = useState<CardResponse[]>([]);
 
+  const [members, setMembers] = useState<BoardMemberResponse[]>([]);
+  const currentUserId = getCurrentUserId();
+  const myRole = members.find((m) => m.userId === currentUserId)?.role;
+  const isOwner = myRole === "Owner";
+  const canEdit = myRole === "Owner" || myRole === "Editor";
+
   const [loadBoardError, setLoadBoardError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   
@@ -88,31 +110,22 @@ export default function BoardDetailPage() {
 
   const sensors = useSensors(useSensor(PointerSensor));
 
+  const applyBoardData = useCallback((data: BoardData) => {
+    setBoard(data.board);
+    setBoardName(data.board.name);
+    setMembers(data.members);
+    setColumns(data.columns);
+    setCards(data.cards);
+  }, [])
+
   useEffect(() => {
     if (!boardId) return;
 
-    async function loadBoard() {
-      try {
-        const board = await getBoardById(boardId!);
-        setBoard(board);
-        setBoardName(board.name);
-
-        const columnList = await getColumns(boardId!);
-        const cardLists = await Promise.all(
-          columnList.map((column) => getCards(boardId!, column.id))
-        );
-
-        setColumns(columnList);
-        setCards(cardLists.flat());
-      } catch {
-        setLoadBoardError("Failed to load board.");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadBoard();
-  }, [boardId]);
+    fetchBoardData(boardId)
+      .then(applyBoardData)
+      .catch(() => setLoadBoardError("Failed to load board."))
+      .finally(() => setLoading(false));
+  }, [boardId, applyBoardData]);
 
   async function handleUpdateBoardName(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -130,8 +143,6 @@ export default function BoardDetailPage() {
       setBoardActionError("Failed to update board name.");
     }
   }
-
-  
 
   async function handleDeleteBoard() {
     if (!boardId) return;
@@ -159,15 +170,41 @@ export default function BoardDetailPage() {
   useEffect(() => {
     if (!boardId) return;
 
+    let redirectTimer: ReturnType<typeof setTimeout> | undefined;
+    let active = true;
+
     const connection = getConnection();
 
     function handleBoardRenamed(payload: BoardRenamedPayload) {
       setBoardName(payload.name);
     }
 
+    function redirectToBoardsSoon(message: string) {
+      setLoadBoardError(message);
+      redirectTimer = setTimeout(() => navigate("/boards"), 2000);
+    }
+
     function handleBoardDeleted() {
-      setLoadBoardError("This board has been deleted by its owner.");
-      setTimeout(() => navigate("/boards"), 2000);
+      redirectToBoardsSoon("This board has been deleted by its owner.");
+    }
+
+    function handleMemberAdded(payload: BoardMemberResponse) {
+      setMembers((prev) => {
+        if (prev.some((m) => m.userId === payload.userId)) return prev;
+        return [...prev, payload];
+      })
+    }
+
+    function handleMemberRoleChanged(payload: BoardMemberResponse) {
+      setMembers((prev) => prev.map((m) => (m.userId === payload.userId ? payload : m)));
+    }
+
+    function handleMemberRemoved(payload: { userId: string }) {
+      if (payload.userId === getCurrentUserId()) {
+        redirectToBoardsSoon("You have been removed fromt his board.");
+        return;
+      }
+      setMembers((prev) => prev.filter((m) => m.userId !== payload.userId));
     }
 
     function handleColumnCreated(payload: ColumnCreatedPayload) {
@@ -241,8 +278,25 @@ export default function BoardDetailPage() {
       setCards((prevCards) => prevCards.filter((card) => card.id !== payload.cardId));
     }
 
+    async function handleReconnected() {
+      if (!active) return;
+
+      try {
+        await connection.invoke("JoinBoard", boardId);
+        const data = await fetchBoardData(boardId!);
+        if (!active) return;
+        applyBoardData(data);
+      } catch (err) {
+        if (!active) return;
+        redirectToBoardsSoon("Could not restore this board. You may have lost access to it.");
+      }
+    }
+
     connection.on("BoardRenamed", handleBoardRenamed);
     connection.on("BoardDeleted", handleBoardDeleted);
+    connection.on("MemberAdded", handleMemberAdded);
+    connection.on("MemberRoleChanged", handleMemberRoleChanged);
+    connection.on("MemberRemoved", handleMemberRemoved);
     connection.on("ColumnMoved", handleColumnMoved);
     connection.on("ColumnCreated", handleColumnCreated);
     connection.on("ColumnRenamed", handleColumnRenamed);
@@ -252,20 +306,23 @@ export default function BoardDetailPage() {
     connection.on("CardUpdated", handleCardUpdated);
     connection.on("CardDeleted", handleCardDeleted);
 
+    connection.onreconnected(handleReconnected);
+
     async function connectAndJoin() {
-      if (connection.state === "Disconnected") {
-        await connection.start();
-      }
-      if (connection.state === "Connected") {
-        await connection.invoke("JoinBoard", boardId);
-      }
+      await ensureConnected();
+      await connection.invoke("JoinBoard", boardId);
     }
 
-    connectAndJoin();
+    connectAndJoin().catch((err) => console.error("SignalR:", err));
 
     return () => {
+      active = false;
+
       connection.off("BoardRenamed", handleBoardRenamed);
       connection.off("BoardDeleted", handleBoardDeleted);
+      connection.off("MemberAdded", handleMemberAdded);
+      connection.off("MemberRoleChanged", handleMemberRoleChanged);
+      connection.off("MemberRemoved", handleMemberRemoved);
       connection.off("ColumnMoved", handleColumnMoved);
       connection.off("ColumnCreated", handleColumnCreated);
       connection.off("ColumnRenamed", handleColumnRenamed);
@@ -274,15 +331,25 @@ export default function BoardDetailPage() {
       connection.off("CardCreated", handleCardCreated);
       connection.off("CardUpdated", handleCardUpdated);
       connection.off("CardDeleted", handleCardDeleted);
+
+      clearTimeout(redirectTimer);
       if (connection.state === "Connected") {
         connection.invoke("LeaveBoard", boardId).catch(() => {});
       }
     };
   }, [boardId, navigate]);
 
+  useEffect(() => {
+    if (!dragError) return;
+    const timer = setTimeout(() => setDragError(null), 4000);
+    return () => clearTimeout(timer);
+  }, [dragError])
+
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-    if (!over || !boardId) return;
+    if (!over || !boardId || !canEdit) return;
+
+    setDragError(null);
 
     const activeId = active.id as string;
     const overId = over.id as string;
@@ -345,45 +412,56 @@ export default function BoardDetailPage() {
         <ErrorMessage message={dragError} />
         <ErrorMessage message={boardActionError} />
 
-        {isEditingBoard ? (
-          <form onSubmit={handleUpdateBoardName} className="flex max-w-md gap-2">
-            <input className="input" value={boardName} onChange={(e) => {
-              setBoardName(e.target.value);
-              setBoardActionError(null);
-            }} />
-            <button type="submit" className="btn-primary">Save</button>
-            <button type="button" className="btn-secondary" onClick={() => {
-              setBoardName(board!.name);
-              setBoardActionError(null);
-              setIsEditingBoard(false);
-            }} >
-              Cancel
-            </button>
-          </form>
-        ) : (
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold">{board!.name}</h1>
-            <button type="button" className="btn-secondary" onClick={() => {
-              setBoardName(board!.name);
-              setIsEditingBoard(true);
-            }}>Edit</button>
-            <button type="button" className="btn-danger" onClick={handleDeleteBoard}>Delete board</button>
-          </div>
+        {canEdit && (
+          isEditingBoard ? (
+            <form onSubmit={handleUpdateBoardName} className="flex max-w-md gap-2">
+              <input className="input" value={boardName} onChange={(e) => {
+                setBoardName(e.target.value);
+                setBoardActionError(null);
+              }} />
+              <button type="submit" className="btn-primary">Save</button>
+              <button type="button" className="btn-secondary" onClick={() => {
+                setBoardName(board!.name);
+                setBoardActionError(null);
+                setIsEditingBoard(false);
+              }} >
+                Cancel
+              </button>
+            </form>
+          ) : (
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-semibold">{board!.name}</h1>
+              <button type="button" className="btn-secondary" onClick={() => {
+                setBoardName(board!.name);
+                setIsEditingBoard(true);
+              }}>Edit</button>
+              {isOwner && <button type="button" className="btn-danger" onClick={handleDeleteBoard}>Delete board</button>}
+            </div>
+          )
         )}
 
+        <MembersPanel
+          boardId={boardId!}
+          members={members}
+          canManage={isOwner}
+        />
+
         <ErrorMessage message={createColumnError} />
-        <form onSubmit={handleCreateColumn} className="flex max-w-md gap-2">
-          <input
-            className="input"
-            value={newColumnName}
-            onChange={(e) => {
-              setNewColumnName(e.target.value);
-              setCreateColumnError(null);
-            }}
-            placeholder="New column name"
-          />
-          <button type="submit" className="btn-primary shrink-0">Add column</button>
-        </form>
+
+        {canEdit && (
+          <form onSubmit={handleCreateColumn} className="flex max-w-md gap-2">
+            <input
+              className="input"
+              value={newColumnName}
+              onChange={(e) => {
+                setNewColumnName(e.target.value);
+                setCreateColumnError(null);
+              }}
+              placeholder="New column name"
+            />
+            <button type="submit" className="btn-primary shrink-0">Add column</button>
+          </form>
+        )}
 
         <SortableContext
           items={[...columns].sort((a, b) => a.order - b.order).map((c) => c.id)}
@@ -400,6 +478,7 @@ export default function BoardDetailPage() {
                     .filter((c) => c.columnId === column.id)
                     .sort((a, b) => a.order - b.order)}
                   boardId={boardId!}
+                  canEdit = {canEdit}
                 />
               ))}
           </div>
