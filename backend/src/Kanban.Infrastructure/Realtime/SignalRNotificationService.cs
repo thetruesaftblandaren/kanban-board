@@ -1,3 +1,4 @@
+using Kanban.Application.Boards;
 using Kanban.Application.Common;
 using Kanban.Domain.Entities;
 using Microsoft.AspNetCore.SignalR;
@@ -7,10 +8,12 @@ namespace Kanban.Infrastructure.Realtime;
 public class SignalRNotificationService : INotificationService
 {
     private readonly IHubContext<BoardHub> _hubContext;
+    private readonly ConnectionTracker _tracker;
 
-    public SignalRNotificationService(IHubContext<BoardHub> hubContext)
+    public SignalRNotificationService(IHubContext<BoardHub> hubContext, ConnectionTracker tracker)
     {
         _hubContext = hubContext;
+        _tracker = tracker;
     }
 
     /* Boards */
@@ -34,6 +37,40 @@ public class SignalRNotificationService : INotificationService
         await _hubContext.Clients
             .Group(BoardHub.GroupName(boardId.ToString()))
             .SendAsync("BoardDeleted", new { boardId });
+    }
+
+    public async Task NotifyBoardListChangedAsync(IEnumerable<Guid> userIds)
+    {
+        var groups = userIds.Distinct().Select(BoardHub.UserGroupName).ToList();
+        if (groups.Count == 0) return;
+
+        await _hubContext.Clients.Groups(groups).SendAsync("BoardListChanged");
+    }
+
+    public async Task NotifyMemberAddedAsync(Guid boardId, Guid userId, string displayName, BoardRole role)
+    {
+        await _hubContext.Clients
+            .Group(BoardHub.GroupName(boardId.ToString()))
+            .SendAsync("MemberAdded", new { userId, displayName, role });
+    }
+
+    public async Task NotifyMemberRoleChangedAsync(Guid boardId, Guid userId, string displayName, BoardRole role)
+    {
+        await _hubContext.Clients
+            .Group(BoardHub.GroupName(boardId.ToString()))
+            .SendAsync("MemberRoleChanged", new { userId, displayName, role });
+    }
+
+    public async Task NotifyMemberRemovedAsync(Guid boardId, Guid userId)
+    {
+        var group = BoardHub.GroupName(boardId.ToString());
+
+        await _hubContext.Clients
+            .Group(group)
+            .SendAsync("MemberRemoved", new { userId });
+        
+        foreach (var connectionId in _tracker.GetConnections(userId))
+            await _hubContext.Groups.RemoveFromGroupAsync(connectionId, group);
     }
 
     /* Columns */

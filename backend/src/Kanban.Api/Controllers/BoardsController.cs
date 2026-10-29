@@ -46,6 +46,34 @@ public class BoardsController : ControllerBase
         return result.Success ? Ok(result.Value) : NotFound(result.Errors);
     }
 
+    [HttpGet("{id}/members")]
+    public async Task<IActionResult> GetMembers(Guid id)
+    {
+        var result = await _boardService.GetMembersAsync(GetUserId(), id);
+        return result.Success ? Ok(result.Value) : NotFound(result.Errors);
+    }
+
+    [HttpPost("{id}/members")]
+    public async Task<IActionResult> InviteMember(Guid id, InviteMemberRequest request)
+    {
+        var result = await _boardService.InviteMemberAsync(GetUserId(), id, request);
+        return result.Success ? Ok(result.Success) : NotFound(result.Errors);
+    }
+
+    [HttpPut("{id}/members/{memberUserId}")]
+    public async Task<ActionResult> ChangeMemberRole(Guid id, Guid memberUserId, ChangeMemberRoleRequest request)
+    {
+        var result = await _boardService.ChangeMemberRoleAsync(GetUserId(), id, memberUserId, request);
+        return result.Success ? Ok(result.Success) : NotFound(result.Errors);
+    }
+
+    [HttpDelete("{id}/members/{memberUserId}")]
+    public async Task<ActionResult> RemoveMember(Guid id, Guid memberUserId)
+    {
+        var result = await _boardService.RemoveMemberAsync(GetUserId(), id, memberUserId);
+        return result.Success ? NoContent() : BadRequest(result.Errors);
+    }
+
     [HttpPut("{Id}")]
     public async Task<IActionResult> Update(Guid id, UpdateBoardRequest request)
     {

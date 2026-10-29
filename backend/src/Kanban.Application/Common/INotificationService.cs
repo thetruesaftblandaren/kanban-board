@@ -1,3 +1,4 @@
+using Kanban.Application.Boards;
 using Kanban.Domain.Entities;
 
 namespace Kanban.Application.Common;
@@ -9,6 +10,10 @@ public interface INotificationService
     Task NotifyBoardCreatedAsync(Guid boardId, string name);
     Task NotifyBoardRenamedAsync(Guid boardId, string name);
     Task NotifyBoardDeletedAsync(Guid boardId);
+    Task NotifyBoardListChangedAsync(IEnumerable<Guid> userIds);
+    Task NotifyMemberAddedAsync(Guid boardId, Guid userId, string displayName, BoardRole role);
+    Task NotifyMemberRoleChangedAsync(Guid boardId, Guid userId, string displayName, BoardRole role);
+    Task NotifyMemberRemovedAsync(Guid boardId, Guid userId);
 
     /* Columns */
     

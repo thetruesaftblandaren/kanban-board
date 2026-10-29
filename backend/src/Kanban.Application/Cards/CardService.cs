@@ -21,9 +21,9 @@ public class CardService : ICardService
             return Result<CardResponse>.Fail("Board not found.");
         }
 
-        if (!board.IsMember(userId))
+        if (!board.CanEdit(userId))
         {
-            return Result<CardResponse>.Fail("You do not have access to this board.");
+            return Result<CardResponse>.Fail("You do not have permission to edit this board.");
         }
 
         try
@@ -74,9 +74,9 @@ public class CardService : ICardService
             return Result<CardResponse>.Fail("Board not found.");
         }
 
-        if (!board.IsMember(userId))
+        if (!board.CanEdit(userId))
         {
-            return Result<CardResponse>.Fail("You do not have access to this board.");
+            return Result<CardResponse>.Fail("You do not have permission to edit this board.");
         }
 
         try
@@ -116,9 +116,9 @@ public class CardService : ICardService
             return Result<CardResponse>.Fail("Board not found.");
         }
 
-        if (!board.IsMember(userId))
+        if (!board.CanEdit(userId))
         {
-            return Result<CardResponse>.Fail("You do not have access to this board.");
+            return Result<CardResponse>.Fail("You do not have permission to edit this board.");
         }
 
         try
@@ -150,9 +150,9 @@ public class CardService : ICardService
             return Result<bool>.Fail("Board not found.");
         }
 
-        if (!board.IsMember(userId))
+        if (!board.CanEdit(userId))
         {
-            return Result<bool>.Fail("You do not have access to this board.");
+            return Result<bool>.Fail("You do not have permission to edit this board.");
         }
 
         try

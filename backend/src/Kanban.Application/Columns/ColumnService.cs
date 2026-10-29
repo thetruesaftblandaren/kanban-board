@@ -19,8 +19,8 @@ public class ColumnService : IColumnService
         if (board is null)
             return Result<ColumnResponse>.Fail("Board not found.");
 
-        if (!board.IsMember(userId))
-            return Result<ColumnResponse>.Fail("You do not have access to this board.");
+        if (!board.CanEdit(userId))
+            return Result<ColumnResponse>.Fail("You do not have permission to edit this board.");
 
         try
         {
@@ -62,9 +62,9 @@ public class ColumnService : IColumnService
             return Result<ColumnResponse>.Fail("Board not found.");
         }
 
-        if (!board.IsMember(userId))
+        if (!board.CanEdit(userId))
         {
-            return Result<ColumnResponse>.Fail("You do not have access to this board.");
+            return Result<ColumnResponse>.Fail("You do not have permission to edit this board.");
         }
 
         try
@@ -92,8 +92,8 @@ public class ColumnService : IColumnService
         if (board is null)
             return Result<ColumnResponse>.Fail("Board not found.");
         
-        if (!board.IsMember(userId))
-            return Result<ColumnResponse>.Fail("You do not have access to this board.");
+        if (!board.CanEdit(userId))
+            return Result<ColumnResponse>.Fail("You do not have permission to edit this board.");
 
         try
         {
@@ -122,8 +122,8 @@ public class ColumnService : IColumnService
         if (board is null)
             return Result<bool>.Fail("Board not found.");
 
-        if (!board.IsMember(userId))
-            return Result<bool>.Fail("You do not have access to this board.");
+        if (!board.CanEdit(userId))
+            return Result<bool>.Fail("You do not have permission to edit this board.");
 
         try
         {

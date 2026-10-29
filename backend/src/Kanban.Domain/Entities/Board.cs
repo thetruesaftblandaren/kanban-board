@@ -136,4 +136,56 @@ public class Board
         var card = sourceColumn.DeleteCard(cardId);
         targetColumn.InsertCard(card, newOrder);
     }
+
+    public BoardRole? GetRole(Guid userId)
+    {
+        return _members.FirstOrDefault(m => m.UserId == userId)?.Role;
+    }
+
+    public bool CanEdit(Guid userId)
+    {
+        return GetRole(userId) is BoardRole.Owner or BoardRole.Editor;
+    }
+
+    public BoardMember AddMember(Guid userId, BoardRole role)
+    {
+        if (!Enum.IsDefined(role))
+            throw new ArgumentException("Invalid role.", nameof(role));
+        if (role == BoardRole.Owner)
+            throw new ArgumentException("A board can only have one owner, assigned at creation.");
+        if (IsMember(userId))
+            throw new ArgumentException("This user is already a member of the board.");
+        
+        var member = new BoardMember { Id = Guid.NewGuid(), BoardId = Id, UserId = userId, Role = role };
+        _members.Add(member);
+        return member;
+    }
+
+    public void RemoveMember(Guid userId)
+    {
+        var member = _members.FirstOrDefault(m => m.UserId == userId)
+            ?? throw new ArgumentException("User is not a member of this board.");
+        
+        if (member.Role == BoardRole.Owner)
+            throw new ArgumentException("The owner cannot be removed from the board.");
+        
+        _members.Remove(member);
+    }
+
+    public BoardMember ChangeMemberRole(Guid userId, BoardRole role)
+    {
+        if (!Enum.IsDefined(role))
+            throw new ArgumentException("Invalid role.", nameof(role));
+        if (role == BoardRole.Owner)
+            throw new ArgumentException("Ownership cannot be assigned to another member.");
+        
+        var member = _members.FirstOrDefault(m => m.UserId == userId)
+            ?? throw new ArgumentException("User is not a member of this board.");
+        
+        if (member.Role == BoardRole.Owner)
+            throw new ArgumentException("The owner's role cannot be changed.");
+        
+        member.Role = role;
+        return member;
+    }
 }

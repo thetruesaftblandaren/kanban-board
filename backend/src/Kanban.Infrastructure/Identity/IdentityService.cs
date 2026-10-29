@@ -32,6 +32,12 @@ public class IdentityService : IIdentityService
         return Result<Guid>.Ok(appUser.Id);
     }
 
+    public async Task<Guid?> FindUserIdByEmailAsync(string email)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        return user?.Id;
+    }
+
     public async Task<Guid?> ValidateCredentialsAsync(string email, string password)
     {
         var appUser = await _userManager.FindByEmailAsync(email);
