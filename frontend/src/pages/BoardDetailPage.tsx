@@ -10,7 +10,7 @@ import {
 import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import { getColumns, getCards, moveCard, createColumn, moveColumn, getBoardById, updateBoard, deleteBoard, getMembers } from "../api/boards";
 import { ensureConnected, getConnection } from "../api/signalr";
-import type { ColumnResponse, CardResponse, BoardResponse, CardCategory, BoardMemberResponse, BoardRole } from "../types/api";
+import type { ColumnResponse, CardResponse, BoardResponse, CardCategory, BoardMemberResponse } from "../types/api";
 import DroppableColumn from "../components/DroppableColumn";
 import ErrorMessage from "../components/ErrorMessage";
 import { getCurrentUserId } from "../api/auth";
@@ -286,7 +286,7 @@ export default function BoardDetailPage() {
         const data = await fetchBoardData(boardId!);
         if (!active) return;
         applyBoardData(data);
-      } catch (err) {
+      } catch {
         if (!active) return;
         redirectToBoardsSoon("Could not restore this board. You may have lost access to it.");
       }
