@@ -152,7 +152,10 @@ dotnet test backend
 - **Composite-key-eligible `BoardMember` given its own `Id` instead**: `(UserId, BoardId)` is already a natural unique key, but a surrogate `Id` was chosen for simplicity and consistency with the rest of the model, backed by a unique index on `(UserId, BoardId)` to preserve the actual constraint.
 - **`Board` as an Aggregate Root**: `Column` and `Card` have no public setters and no standalone repositories; all mutation happens through `Board` (`AddColumn`, `AddCard`, `MoveCard`), using `internal` methods on the child entities so only `Kanban.Domain` code can bypass the root. This was introduced specifically because card-move operations need to keep `Order` consistent within a column, which is easier to guarantee in one place than to re-validate in every service that touches cards.
 - **dnd-kit over react-beautiful-dnd**: actively maintained and has better TypeScript support. Cards and columns use `useSortable`, with a vertical `SortableContext` per column and a horizontal one around the columns.
-- **SignalR groups per board**: each board has its own group (`board-{id}`). Clients join when they open a board and leave when they navigate away, so updates only reach the people viewing that board.
+- **SignalR groups per board**: each board has its own group `(board-{id})`. BoardHub validates board membership when clients call JoinBoard, ensuring that only authorized users can join. After reconnecting, clients rejoin the relevant groups and refetch the board to ensure their state is up to date.
+- **SignalR connection tracking and board list notifications**: `ConnectionTracker` tracks connections and handles group cleanup when a user's board membership is revoked. Each user also has a dedicated group for board-list change notifications, allowing updates to be targeted independently of board-specific groups.
+- **SignalR connection tracking**: `ConnectionTracker` maintains a thread-safe mapping between SignalR connection IDs and user IDs. This allows the application to find all active connections belonging to a specific user, for example when sending notifications or managing group membership. Connections are added when registered and removed when disconnected.
+- **User-specific board list notifications**: each user has a dedicated SignalR group for board-list change notifications, allowing updates to be sent to that user's active connections independently of board-specific groups.
 - **Access and refresh tokens**: the access token is a JWT that lives for 15 minutes, and an axios interceptor renews it automatically. Refresh tokens are random strings stored only as SHA-256 hashes, valid for 7 days, single-use (rotated on every renewal), and revoked on logout. Because each renewal extends the session, an active user is never logged out. They are kept in `localStorage` for simplicity; `httpOnly` cookies would protect better against XSS but add CORS complexity and constrain hosting.
 - **`INotificationService` abstraction**: the interface lives in `Kanban.Application` and the SignalR implementation (`SignalRNotificationService`, `BoardHub`) in `Kanban.Infrastructure`, so the application layer has no dependency on SignalR.
 - **`Column` sorts its cards by `Order` before mutating them**: EF Core returns child collections in no guaranteed order, so removing and inserting by index put cards in the wrong place until the list was sorted by `Order` first. `Board` uses the same approach for columns.
@@ -183,19 +186,22 @@ To be added
 - [x] CI pipeline
 - [x] Styling
 - [x] Card categories (bug / feature / task)
-- [ ] Board member invitations (add non-owner members)
+- [x] Board member add, remove, and change role
+- [x] Role based permissions
 - [ ] Assign cards to board members (requires invitations)
 
 This section is kept up to date as the project progresses, rather than implying the project is further along than it is.
 
 ## Known Limitations
 
-- Roles (`Owner`, `Editor`, `Viewer`) are stored, but only membership is enforced. A `Viewer` would currently be able to edit.
-- The Delete button on a board is shown to every member. The server only allows the owner to delete, so others get an error message.
 - Expired and revoked refresh tokens are not cleaned out of the database.
 - The unit tests cover domain logic only. They cannot catch bugs that depend on the order EF Core loads data in, which would need an integration test against a real database.
 - The API address (`localhost:5093`) and the allowed CORS origin (`localhost:5173`) are hardcoded for local development and need to become configuration before deploying.
 - Card categories are predefined and cannot be configured for each `Board`.
+- `ConnectionTracker` stores connection information in memory, so it only works reliably with a single server instance. A multi-instance deployment would require shared connection tracking or a distributed approach.
+- Automatic reconnection gives up after approximately 40 seconds, so clients may need to reconnect manually if the connection cannot be restored within that period.
+- Unauthorized access to boards returns `404 Not Found` rather than `403 Forbidden`, intentionally avoiding disclosure of whether the resource exist or is accessible.
+- The invitation flow reveals whether an email address is registered, which could allow someone to discover registered accounts.
 
 ## License
 
