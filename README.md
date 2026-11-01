@@ -192,6 +192,8 @@ To be added
 - [x] Board member add, remove, and change role
 - [x] Role based permissions
 - [x] Assign cards to board members (requires invitations)
+- [ ] Filter by assignee or category
+- [ ] Application-layer tests
 
 This section is kept up to date as the project progresses, rather than implying the project is further along than it is.
 
