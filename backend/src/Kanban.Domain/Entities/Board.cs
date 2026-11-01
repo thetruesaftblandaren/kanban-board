@@ -137,6 +137,20 @@ public class Board
         targetColumn.InsertCard(card, newOrder);
     }
 
+    public void AssignCard(Guid columnId, Guid cardId, Guid? assigneeId)
+    {
+        var column = _columns.FirstOrDefault(c => c.Id == columnId)
+            ?? throw new InvalidOperationException("Column not found on this board.");
+        
+        var card = column.Cards.FirstOrDefault(c => c.Id == cardId)
+            ?? throw new InvalidOperationException("Card not found in this column.");
+        
+        if (assigneeId is not null && !IsMember(assigneeId.Value))
+            throw new InvalidOperationException("Only board members can be assigned to cards.");
+
+        card.AssignToUser(assigneeId);
+    }
+
     public BoardRole? GetRole(Guid userId)
     {
         return _members.FirstOrDefault(m => m.UserId == userId)?.Role;
@@ -168,6 +182,9 @@ public class Board
         
         if (member.Role == BoardRole.Owner)
             throw new ArgumentException("The owner cannot be removed from the board.");
+        
+        foreach (var card in _columns.SelectMany(c => c.Cards).Where(c => c.AssigneeId == userId))
+            card.AssignToUser(null);
         
         _members.Remove(member);
     }

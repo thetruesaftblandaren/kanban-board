@@ -33,7 +33,7 @@ public class CardService : ICardService
 
             await _notificationService.NotifyCardCreatedAsync(boardId, card.Id, columnId, card.Title, card.Description, card.Category, card.Order);
 
-            return Result<CardResponse>.Ok(new CardResponse(card.Id, card.Title, card.Description, card.Category, card.ColumnId, card.Order, card.CreatedAt));
+            return Result<CardResponse>.Ok(new CardResponse(card.Id, card.Title, card.Description, card.Category, card.ColumnId, card.Order, card.CreatedAt, card.AssigneeId));
         }
         catch (ArgumentException ex)
         {
@@ -60,7 +60,7 @@ public class CardService : ICardService
 
         var response = column.Cards
             .OrderBy(c => c.Order)
-            .Select(c => new CardResponse(c.Id, c.Title, c.Description, c.Category, c.ColumnId, c.Order, c.CreatedAt))
+            .Select(c => new CardResponse(c.Id, c.Title, c.Description, c.Category, c.ColumnId, c.Order, c.CreatedAt, c.AssigneeId))
             .ToList();
 
         return Result<ICollection<CardResponse>>.Ok(response);
@@ -100,7 +100,7 @@ public class CardService : ICardService
                 }
             }
             
-            return Result<CardResponse>.Ok(new CardResponse(movedCard.Id, movedCard.Title, movedCard.Description, movedCard.Category, movedCard.ColumnId, movedCard.Order, movedCard.CreatedAt));
+            return Result<CardResponse>.Ok(new CardResponse(movedCard.Id, movedCard.Title, movedCard.Description, movedCard.Category, movedCard.ColumnId, movedCard.Order, movedCard.CreatedAt, movedCard.AssigneeId));
         }
         catch (InvalidOperationException ex)
         {
@@ -130,7 +130,7 @@ public class CardService : ICardService
 
             await _notificationService.NotifyCardUpdatedAsync(boardId, card.Id, card.Title, card.Description, card.Category);
 
-            return Result<CardResponse>.Ok(new CardResponse(card.Id, card.Title, card.Description, card.Category, card.ColumnId, card.Order, card.CreatedAt));
+            return Result<CardResponse>.Ok(new CardResponse(card.Id, card.Title, card.Description, card.Category, card.ColumnId, card.Order, card.CreatedAt, card.AssigneeId));
         }
         catch (ArgumentException ex)
         {
@@ -168,5 +168,30 @@ public class CardService : ICardService
         {
             return Result<bool>.Fail(ex.Message);
         }
+    }
+
+    public async Task<Result<CardResponse>> AssignCardAsync(Guid userId, Guid boardId, Guid columnId, Guid cardId, AssignCardRequest request)
+    {
+        var board = await _boardRepository.GetByIdWithDetailsAsync(boardId);
+        if (board is null)
+            return Result<CardResponse>.Fail("Board not found.");
+        if (!board.CanEdit(userId))
+            return Result<CardResponse>.Fail("You do not have permission to edit this board.");
+        
+        try
+        {
+            board.AssignCard(columnId, cardId, request.AssigneeId);
+            await _boardRepository.SaveChangesAsync();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Result<CardResponse>.Fail(ex.Message);
+        }
+
+        var card = board.Columns.First(c => c.Id == columnId).Cards.First(c => c.Id == cardId);
+
+        await _notificationService.NotifyCardAssignedAsync(boardId, card.Id, card.AssigneeId);
+
+        return Result<CardResponse>.Ok(new CardResponse(card.Id, card.Title, card.Description, card.Category, card.ColumnId, card.Order, card.CreatedAt, card.AssigneeId));
     }
 }

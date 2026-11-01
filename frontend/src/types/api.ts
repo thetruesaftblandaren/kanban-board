@@ -37,4 +37,5 @@ export interface CardResponse {
     columnId: string;
     order: number;
     createdAt: string;
+    assigneeId: string | null;
 }

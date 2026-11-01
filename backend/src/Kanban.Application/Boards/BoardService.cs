@@ -148,6 +148,11 @@ public class BoardService : IBoardService
             return Result<bool>.Fail("BoardNotFound");
         if (board.GetRole(userId) != BoardRole.Owner)
             return Result<bool>.Fail("Only the board owner can change roles.");
+        
+        var cleared = board.Columns.SelectMany(c => c.Cards)
+            .Where(c => c.AssigneeId == memberUserId)
+            .Select(c => c.Id)
+            .ToList();
 
         try
         {
@@ -161,6 +166,9 @@ public class BoardService : IBoardService
 
         await _notificationService.NotifyMemberRemovedAsync(boardId, memberUserId);
         await _notificationService.NotifyBoardListChangedAsync([memberUserId]);
+        
+        foreach (var cardId in cleared)
+            await _notificationService.NotifyCardAssignedAsync(boardId, cardId, null);
 
         return Result<bool>.Ok(true);
     }
@@ -188,7 +196,6 @@ public class BoardService : IBoardService
         {
             return Result<BoardResponse>.Fail(ex.Message);
         }
-
     }
 
     public async Task<Result<bool>> DeleteBoardAsync(Guid userId, Guid boardId)

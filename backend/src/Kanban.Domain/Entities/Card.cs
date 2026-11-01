@@ -9,6 +9,7 @@ public class Card
     public Guid ColumnId { get; set; }
     public int Order { get; set; }
     public DateTime CreatedAt { get; set; }
+    public Guid? AssigneeId { get; set; }
 
     private Card() {}
 
@@ -53,6 +54,11 @@ public class Card
     internal void AssignToColumn(Guid columnId)
     {
         ColumnId = columnId;
+    }
+
+    internal void AssignToUser(Guid? userId)
+    {
+        AssigneeId = userId;
     }
 
     private static string? NormalizeDescription(string? description)

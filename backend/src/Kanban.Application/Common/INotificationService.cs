@@ -28,4 +28,5 @@ public interface INotificationService
     Task NotifyCardCreatedAsync(Guid boardId, Guid cardId, Guid columnId, string title, string? description, CardCategory category, int order);
     Task NotifyCardUpdatedAsync(Guid boardId, Guid cardId, string title, string? description, CardCategory category);
     Task NotifyCardDeletedAsync(Guid boardId, Guid cardId);
+    Task NotifyCardAssignedAsync(Guid boardId, Guid cardId, Guid? assigneeId);
 }

@@ -62,6 +62,13 @@ public class CardsController : ControllerBase
         return result.Success ? Ok(result.Value) : NotFound(result.Errors);
     }
 
+    [HttpPut("{cardId}/assignee")]
+    public async Task<IActionResult> Assign(Guid boardId, Guid columnId, Guid cardId, AssignCardRequest request)
+    {
+        var result = await _cardService.AssignCardAsync(GetUserId(), boardId, columnId, cardId, request);
+        return result.Success ? Ok(result.Value) : BadRequest(result.Errors);
+    }
+
     private Guid GetUserId()
     {
         var sub = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");

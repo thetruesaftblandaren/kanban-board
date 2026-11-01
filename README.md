@@ -28,17 +28,19 @@ Built as a portfolio project to demonstrate fullstack development skills as a ju
 - Move a card between columns (or reorder within a column), with consistent ordering enforced by the `Board` aggregate
 - Drag and drop a column to change order
 - React frontend: login, register, logout, board list, board detail view, and create/edit/delete forms for boards, columns, and cards
-- Drag-and-drop for cards and columns (dnd-kit). The UI updates when the server's SignalR broadcast arrives, so every client, including the one dragging, goes through the same path.
+- Drag-and-drop for cards and columns (dnd-kit). The UI updates when the server's SignalR broadcast arrives, so every client, including the one dragging, goes through the same path
 - Card categories (Task, Bug, Feature), selectable when creating or editing a card and shown as a badge on the card, synced live via SignalR
+- Board members with roles: the owner can invite registered users by email as Editor or Viewer, change their role and remove them. Roles are enforced on the server, and the UI hides editing controls from viewers
+- Assign a card to a board member, shown as an avatar on the card
 - Real-time updates via SignalR: card and column changes (create, update, delete, move) and board rename/delete are broadcast live to everyone viewing the same board. On the board page, SignalR is the single source of truth for UI state: components only call the REST API and never update state themselves, which avoids duplicate-update bugs.
 - Sessions stay alive while the user is active: short-lived access tokens (15 min) are renewed automatically using rotating refresh tokens stored server-side as hashes. Logout revokes the refresh token.
 - Error handling: Validation in the domain layer, surfaced as error messages in the UI
 - Unit tests (xUnit) for domain logic
 - CI pipeline via GitHub Actions (build + test on push)
+- Local development scripts: `setup.sh` (first-time setup) and `dev.sh` (starts everything)
 
 ### Stretch goals
 
-- Invite other users to a specific board
 - Comments on cards
 - Basic notifications (e.g. "X moved card Y")
 
@@ -161,6 +163,7 @@ dotnet test backend
 - **`Column` sorts its cards by `Order` before mutating them**: EF Core returns child collections in no guaranteed order, so removing and inserting by index put cards in the wrong place until the list was sorted by `Order` first. `Board` uses the same approach for columns.
 - **Local development setup and secrets**: setup.sh is designed to be idempotent, preserving existing configuration and secrets across repeated runs. Secrets are generated locally and never committed to version control. dev.sh manages the development processes and cleans them up when stopped with Ctrl+C.
 - **Fixed CardCategory enum**: categories are defined as a fixed enum, stored as text in the database, and serialized as strings over REST and SignalR. Validation happens in the domain using Enum.IsDefined. The default (Task) is applied only in CreateCardRequest; updates require the category to be specified explicitly, preventing a missing field from silently resetting it.
+- **Roles enforced in the aggregate**: `Board.CanEdit` and `Board.GetRole` are used by every mutating service method, so permissions cannot be bypassed from a controller. The domain also guards invariants such as "exactly one owner" and "only members can be assigned to cards".
 
 ## What I Learned
 
@@ -202,6 +205,10 @@ This section is kept up to date as the project progresses, rather than implying 
 - Automatic reconnection gives up after approximately 40 seconds, so clients may need to reconnect manually if the connection cannot be restored within that period.
 - Unauthorized access to boards returns `404 Not Found` rather than `403 Forbidden`, intentionally avoiding disclosure of whether the resource exist or is accessible.
 - The invitation flow reveals whether an email address is registered, which could allow someone to discover registered accounts.
+- Members cannot leave a board themselves, and ownership cannot be transferred.
+- A card has at most one assignee, and there is no way to filter by assignee or category.
+- Tokens are kept in `localStorage`; `httpOnly` cookies would be safer against XSS.
+- The database password is set when the Docker volume is first created; if `.env` changes afterwards, recreate the volume with `docker compose down -v` (this deletes the data).
 
 ## License
 

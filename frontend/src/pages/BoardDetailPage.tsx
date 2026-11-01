@@ -205,6 +205,7 @@ export default function BoardDetailPage() {
         return;
       }
       setMembers((prev) => prev.filter((m) => m.userId !== payload.userId));
+      setCards((prev) => prev.map((c) => (c.assigneeId === payload.userId ? { ...c, assigneeId: null }: c)));
     }
 
     function handleColumnCreated(payload: ColumnCreatedPayload) {
@@ -259,6 +260,7 @@ export default function BoardDetailPage() {
             category: payload.category,
             order: payload.order,
             createdAt: new Date().toISOString(),
+            assigneeId: null,
           },
         ];
       });
@@ -276,6 +278,12 @@ export default function BoardDetailPage() {
 
     function handleCardDeleted(payload: CardDeletedPayload) {
       setCards((prevCards) => prevCards.filter((card) => card.id !== payload.cardId));
+    }
+
+    function handleCardAssigned(payload: { cardId: string, assigneeId: string | null }) {
+      setCards((prev) =>
+        prev.map((c) => (c.id === payload.cardId ? { ...c, assigneeId: payload.assigneeId }: c))
+      );
     }
 
     async function handleReconnected() {
@@ -305,6 +313,7 @@ export default function BoardDetailPage() {
     connection.on("CardCreated", handleCardCreated);
     connection.on("CardUpdated", handleCardUpdated);
     connection.on("CardDeleted", handleCardDeleted);
+    connection.on("CardAssigned", handleCardAssigned);
 
     connection.onreconnected(handleReconnected);
 
@@ -331,6 +340,7 @@ export default function BoardDetailPage() {
       connection.off("CardCreated", handleCardCreated);
       connection.off("CardUpdated", handleCardUpdated);
       connection.off("CardDeleted", handleCardDeleted);
+      connection.off("CardAssigned", handleCardAssigned);
 
       clearTimeout(redirectTimer);
       if (connection.state === "Connected") {
@@ -478,7 +488,8 @@ export default function BoardDetailPage() {
                     .filter((c) => c.columnId === column.id)
                     .sort((a, b) => a.order - b.order)}
                   boardId={boardId!}
-                  canEdit = {canEdit}
+                  canEdit={canEdit}
+                  members={members}
                 />
               ))}
           </div>

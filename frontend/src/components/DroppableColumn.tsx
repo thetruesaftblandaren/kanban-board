@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useSortable, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { type ColumnResponse, type CardResponse, CARD_CATEGORIES, type CardCategory } from "../types/api";
+import { type ColumnResponse, type CardResponse, CARD_CATEGORIES, type CardCategory, type BoardMemberResponse } from "../types/api";
 import { createCard, updateColumn, deleteColumn } from "../api/boards";
 import DraggableCard from "./DraggableCard";
 import ErrorMessage from "./ErrorMessage";
@@ -11,6 +11,7 @@ interface Props {
     cards: CardResponse[];
     boardId: string;
     canEdit: boolean;
+    members: BoardMemberResponse[];
 }
 
 export default function DroppableColumn({
@@ -18,6 +19,7 @@ export default function DroppableColumn({
     cards,
     boardId,
     canEdit,
+    members,
 }: Props) {
     const { attributes, listeners, setNodeRef, transform, transition, isOver, isDragging } = useSortable({ id: column.id, disabled: !canEdit });
     const [newCardTitle, setNewCardTitle] = useState("");
@@ -122,6 +124,7 @@ export default function DroppableColumn({
                             card={card}
                             boardId={boardId}
                             canEdit={canEdit}
+                            members={members}
                         />
                     ))}
                 </ul>

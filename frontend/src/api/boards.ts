@@ -120,3 +120,11 @@ export async function moveCard(boardId: string, cardId: string, targetColumnId: 
     );
     return response.data;
 }
+
+export async function assignCard(boardId: string, columnId: string, cardId: string, assigneeId: string | null): Promise<CardResponse> {
+    const response = await client.put<CardResponse>(
+        `boards/${boardId}/columns/${columnId}/cards/${cardId}/assignee`,
+        { assigneeId }
+    );
+    return response.data;
+}

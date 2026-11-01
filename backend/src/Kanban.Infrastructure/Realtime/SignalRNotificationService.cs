@@ -133,4 +133,10 @@ public class SignalRNotificationService : INotificationService
             .SendAsync("CardDeleted", new { cardId });
     }
 
+    public async Task NotifyCardAssignedAsync(Guid boardId, Guid cardId, Guid? assigneeId)
+    {
+        await _hubContext.Clients
+            .Group(BoardHub.GroupName(boardId.ToString()))
+            .SendAsync("CardAssigned", new { cardId, assigneeId });
+    }
 }
