@@ -4,7 +4,7 @@
 
 A Kanban board with real-time collaboration. When a user moves, creates, or edits a card, every other user viewing the same board will see the update instantly via SignalR, with no page refresh required.
 
-> **Project status: in progress.** Backend (Board → Column → Card CRUD with authorization, JWT auth), real-time updates via SignalR, and a React frontend with drag-and-drop (login, board list, board detail view) are implemented and working. See [Roadmap](#roadmap--not-yet-implemented) below for the current state.
+> **Project status: feature-complete MVP.** Boards, columns and cards with categories and assignees, board members with roles, and live collaboration over SignalR all work end to end. The domain logic has unit tests and CI runs on every push. See [Known limitations](#known-limitations) and the [Roadmap](#roadmap) for what is missing.
 
 ## Why this project
 
@@ -167,7 +167,27 @@ dotnet test backend
 
 ## What I Learned
 
-To be added
+This was my first project with SignalR and one of the most extensive I've done with TypeScript. The problems that taught me the most are below.
+
+**Aggregates need a reason, and the reason came from a bug.** I first modelled `Column` and `Card` as independent entities with their own repositories. When I added drag-and-drop, keeping `Order` consistent turned out to be the real problem, because every service that touched cards had to remember the rules. Making `Board` an aggregate root, with `internal` methods on the children, put those rules in one place and made them unit-testable without a database.
+
+**EF Core gives no guarantee about the order of loaded children.** Cards sometimes landed in the wrong position after a move, but only sometimes. The domain code removed and inserted by index in a list that EF Core had filled in no guaranteed order. I found it by comparing the database rows with what the screen showed, and fixed it by sorting by `Order` before every mutation. The unit tests cannot catch this class of bug, since an in-memory list is always in insertion order, so it is listed under Known limitations.
+
+**Two update paths produce visual duplicates.** A newly created card showed up twice, and a reorder looked random. The UI updated state itself *and* handled the SignalR broadcast, which the sender also receives. I made the broadcast the only way state changes: components call the API and nothing else. The cost is a small delay before the screen updates, which I accepted for consistency.
+
+**Real-time is more than `SendAsync`.** I had to learn the connection lifecycle: React StrictMode starts effects twice, a reconnected connection has lost its group memberships, and a removed member stays in the group (and keeps receiving updates) unless the server removes their connections. I also found that anyone could join any board's group, because `JoinBoard` did not check membership, and that browsers send the JWT in the query string for WebSockets.
+
+**Short-lived tokens need a refresh flow.** Users were logged out after an hour of use, so I added 15-minute access tokens and rotating refresh tokens stored only as hashes. Concurrent requests that all fail with 401 must share one refresh call, because a refresh token works once. The tradeoff, `localStorage` instead of `httpOnly` cookies, is documented above.
+
+**Model and schema drift.** I made `Card.Description` nullable in C# but never added a migration, so the column stayed `NOT NULL` and saving a card without a description returned a 500. Changing a property does not change the database. A migration does, so I now run `dotnet ef migrations add` after every entity change and read what EF wants to do.
+
+**Check the thing you are actually running.** Several of my "bugs" were a stale backend build or a payload that did not contain what I assumed. Logging the real payload before guessing saved a lot of time.
+
+### What I would do differently
+
+- Decide on roles and permissions before building the mutations, instead of retrofitting `CanEdit` afterwards.
+- Add an integration test project early, since the worst bugs lived between the domain and the database.
+- Put API addresses and the CORS origin in configuration from the start.
 
 ## Roadmap / Not Yet Implemented
 
