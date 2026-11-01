@@ -191,7 +191,7 @@ To be added
 - [x] Card categories (bug / feature / task)
 - [x] Board member add, remove, and change role
 - [x] Role based permissions
-- [ ] Assign cards to board members (requires invitations)
+- [x] Assign cards to board members (requires invitations)
 
 This section is kept up to date as the project progresses, rather than implying the project is further along than it is.
 
