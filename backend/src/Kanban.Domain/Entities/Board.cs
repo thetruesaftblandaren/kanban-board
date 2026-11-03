@@ -22,7 +22,7 @@ public class Board
     /// Checks if a user is a member of the board.
     /// </summary>
     /// <param name="userId">The user being checked.</param>
-    /// <returns></returns>
+    /// <returns>True if the user is a member of the board. False if not.</returns>
     public bool IsMember(Guid userId)
     {
         return _members.Any(m => m.UserId == userId);
